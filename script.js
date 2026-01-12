@@ -1,8 +1,8 @@
-// --- 地図初期化 ---
+// --- 地図設定 ---
 const darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'Dark' });
 const map = L.map('map', { layers: [darkMap] }).setView([35.68, 139.76], 12);
 
-// --- 折り畳み機能 ---
+// パネル折り畳み
 function togglePanel() {
     const panel = document.getElementById('side-panel');
     const btn = document.getElementById('toggle-panel');
@@ -11,7 +11,7 @@ function togglePanel() {
     btn.innerText = panel.classList.contains('closed') ? '≪' : '≫';
 }
 
-// --- タブ切り替え ---
+// タブ切り替え
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -19,7 +19,7 @@ function switchTab(tabId) {
     event.currentTarget.classList.add('active');
 }
 
-// --- ダイス送信 ---
+// ダイス送信
 function rollDice() {
     const name = document.getElementById('user-name').value || "noname";
     const cmd = document.getElementById('dice-command').value.trim();
@@ -31,9 +31,16 @@ function rollDice() {
     if (match) {
         const n = parseInt(match[1]), f = parseInt(match[2]);
         const mod = match[3] ? parseInt(match[3]) : 0;
-        let total = mod;
-        for(let i=0; i<n; i++) total += Math.floor(Math.random() * f) + 1;
-        msg = `${cmd} ➔ <b>${total}</b>`;
+        let results = [];
+        let sum = 0;
+        for(let i=0; i<n; i++) {
+            let r = Math.floor(Math.random() * f) + 1;
+            results.push(r);
+            sum += r;
+        }
+        const total = sum + mod;
+        const modText = mod !== 0 ? (mod > 0 ? `+${mod}` : mod) : "";
+        msg = `${cmd} (${results.join(',')})${modText} ➔ <b>${total}</b>`;
     }
 
     addLog(name, msg);
@@ -42,17 +49,19 @@ function rollDice() {
 
 function addLog(name, msg) {
     const log = document.getElementById('chat-log');
-    const item = document.createElement('div');
-    item.className = 'log-item';
-    item.innerHTML = `<div class="log-name">${name}</div><div>${msg}</div>`;
-    log.appendChild(item);
-    log.scrollTop = log.scrollHeight;
+    const div = document.createElement('div');
+    div.className = 'log-item';
+    div.innerHTML = `<div class="log-name">${name}</div><div class="log-msg">${msg}</div>`;
+    log.appendChild(div);
+    // 自動スクロール
+    const container = document.querySelector('.panel-main');
+    container.scrollTop = container.scrollHeight;
 }
 
-// --- アルバム（ドラッグ＆ドロップ） ---
+// アルバム：ドラッグ＆ドロップ
 const dropZone = document.getElementById('drop-zone');
-dropZone.addEventListener('dragover', (e) => e.preventDefault());
-dropZone.addEventListener('drop', (e) => {
+dropZone.ondragover = (e) => e.preventDefault();
+dropZone.ondrop = (e) => {
     e.preventDefault();
     Array.from(e.dataTransfer.files).forEach(file => {
         const reader = new FileReader();
@@ -64,12 +73,16 @@ dropZone.addEventListener('drop', (e) => {
         };
         reader.readAsDataURL(file);
     });
-});
+};
 
-// --- KML読み込み（spots.kmlがある場合のみ） ---
-fetch('spots.kml').then(r => r.text()).then(t => {
-    const track = new L.KML(new DOMParser().parseFromString(t, 'text/xml'));
-    map.addLayer(track);
-}).catch(e => console.log("KML load skip"));
-
-
+// KMLの読み込み（データ本体が必要）
+fetch('spots.kml')
+    .then(res => res.text())
+    .then(kmlText => {
+        const parser = new DOMParser();
+        const kmlDom = parser.parseFromString(kmlText, 'text/xml');
+        const track = new L.KML(kmlDom);
+        map.addLayer(track);
+        const bounds = track.getBounds();
+        if (bounds.isValid()) map.fitBounds(bounds);
+    }).catch(err => console.error("KML data not found. Please export without NetworkLink check."));
