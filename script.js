@@ -1,138 +1,62 @@
-// --- 1. 地図・タイル設定 ---
-// ベースのダークマップ
+// --- 1. 地図レイヤー設定 ---
+// カラー地図 (ダイスログ・情報タブ用)
+const colorTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: 'Color' });
+// 黒基調地図 (路線図タブ用)
 const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'Dark' });
-// 詳細路線図レイヤー (OpenRailwayMap)
+// 鉄道タイル (OpenRailwayMap)
 const railwayTiles = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: 'Railway'
+    maxZoom: 19, attribution: 'Railway'
 });
 
 const map = L.map('map', { 
-    layers: [darkTiles],
+    layers: [colorTiles], // 初期はカラー
     zoomControl: false 
 }).setView([35.6812, 139.7671], 12);
 L.control.zoom({ position: 'topleft' }).addTo(map);
 
+// データ永続化変数
 let lastLatLng = null;
 let albumData = JSON.parse(localStorage.getItem('album-data')) || [];
 
-// 起動時にアルバムデータを復元
-window.addEventListener('load', () => {
-    loadChatLog();
-    renderAlbum();
-});
-
-map.on('click', (e) => {
-    lastLatLng = e.latlng;
-    document.getElementById('selected-pos-info').innerText = `選択中: ${lastLatLng.lat.toFixed(4)}, ${lastLatLng.lng.toFixed(4)}`;
-    L.popup().setLatLng(e.latlng).setContent("この場所に写真を紐付けます").openOn(map);
-});
-
-// --- 2. ダイス機能 ---
-let enterCount = 0;
-let enterTimer;
-
-document.getElementById('dice-command').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        enterCount++;
-        clearTimeout(enterTimer);
-        if (enterCount === 2) {
-            rollDice();
-            enterCount = 0;
-        } else {
-            enterTimer = setTimeout(() => { enterCount = 0; }, 400);
-        }
-    }
-});
-
-function rollDice() {
-    const name = document.getElementById('user-name').value || "noname";
-    const cmd = document.getElementById('dice-command').value.trim();
-    if (!cmd) return;
-
-    let msg = cmd;
-    if (cmd.includes('choice[')) {
-        const match = cmd.match(/choice\[(.*?)\]/);
-        if (match) {
-            const items = match[1].split(',').map(s => s.trim());
-            const picked = items[Math.floor(Math.random() * items.length)];
-            msg = `${cmd} ➔ <b>${picked}</b>`;
-        }
-    } else if (cmd.match(/^(\d+)d(\d+)([\+\-]\d+)?$/i)) {
-        const match = cmd.match(/^(\d+)d(\d+)([\+\-]\d+)?$/i);
-        const n = parseInt(match[1]), f = parseInt(match[2]);
-        const mod = match[3] ? parseInt(match[3]) : 0;
-        let res = [], sum = 0;
-        for(let i=0; i<n; i++){ let r = Math.floor(Math.random()*f)+1; res.push(r); sum+=r; }
-        msg = `${cmd} (${res.join(',')})${mod!=0?(mod>0?'+'+mod:mod):""} ➔ <b>${sum+mod}</b>`;
-    }
-
-    appendLog(name, msg);
-    document.getElementById('dice-command').value = "";
-}
-
-function appendLog(name, msg) {
-    const log = document.getElementById('chat-log');
-    const now = new Date();
-    const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
-    const div = document.createElement('div');
-    div.className = 'log-item';
-    div.innerHTML = `
-        <div class="log-meta"><span class="log-name">${name}</span><span class="log-time">${timeStr}</span></div>
-        <div class="log-msg">${msg}</div>
-        <button class="delete-btn" onclick="deleteLog(this)">削除</button>
-    `;
-    log.appendChild(div);
-    document.querySelector('.panel-main').scrollTop = log.scrollHeight;
-    saveChatLog();
-}
-
-function saveChatLog() { localStorage.setItem('chat-log-data', document.getElementById('chat-log').innerHTML); }
-function loadChatLog() {
-    const saved = localStorage.getItem('chat-log-data');
-    if (saved) document.getElementById('chat-log').innerHTML = saved;
-}
-function deleteLog(btn) { if(confirm('ログを削除しますか？')) { btn.closest('.log-item').remove(); saveChatLog(); } }
-
-// --- 3. タブ・路線図切り替え ---
+// --- 2. タブ・地図モード切り替え ---
 function switchTab(id) {
     document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById('tab-'+id).classList.add('active');
     event.currentTarget.classList.add('active');
 
-    // 路線図タブの場合、黒基調のまま詳細路線タイルを重ねる
+    // 地図の切り替えロジック
     if (id === 'transit') {
-        if (!map.hasLayer(railwayTiles)) railwayTiles.addTo(map);
+        // 路線図タブ：黒基調＋詳細路線
+        map.removeLayer(colorTiles);
+        darkTiles.addTo(map);
+        railwayTiles.addTo(map);
+        document.getElementById('map').classList.add('rail-mode');
     } else {
+        // ダイスログ・情報タブ：カラー地図
         if (map.hasLayer(railwayTiles)) map.removeLayer(railwayTiles);
+        map.removeLayer(darkTiles);
+        colorTiles.addTo(map);
+        document.getElementById('map').classList.remove('rail-mode');
     }
 }
 
-function togglePanel() {
-    const p = document.getElementById('side-panel');
-    const b = document.getElementById('toggle-panel');
-    p.classList.toggle('closed');
-    b.innerText = p.classList.contains('closed') ? '≪' : '≫';
-    b.style.right = p.classList.contains('closed') ? '10px' : '360px';
-}
+// --- 3. アルバム機能 (localStorage対応) ---
+map.on('click', (e) => {
+    lastLatLng = e.latlng;
+    document.getElementById('pos-display').innerText = `選択中: ${lastLatLng.lat.toFixed(4)}, ${lastLatLng.lng.toFixed(4)}`;
+    L.popup().setLatLng(e.latlng).setContent("ここに写真を登録できます").openOn(map);
+});
 
-// --- 4. アルバム（永続化対応） ---
 const dz = document.getElementById('drop-zone');
 dz.ondragover = e => e.preventDefault();
 dz.ondrop = e => {
     e.preventDefault();
-    if (!lastLatLng) { alert("地図をクリックして場所を決めてください"); return; }
-    
+    if (!lastLatLng) { alert("地点を選択してください"); return; }
     Array.from(e.dataTransfer.files).forEach(f => {
         const r = new FileReader();
         r.onload = ev => {
-            const newItem = {
-                lat: lastLatLng.lat,
-                lng: lastLatLng.lng,
-                img: ev.target.result // Base64形式で保存
-            };
-            albumData.push(newItem);
+            const data = { lat: lastLatLng.lat, lng: lastLatLng.lng, src: ev.target.result };
+            albumData.push(data);
             saveAlbum();
             renderAlbum();
         };
@@ -143,35 +67,73 @@ dz.ondrop = e => {
 function renderAlbum() {
     const grid = document.getElementById('album-grid');
     grid.innerHTML = "";
-    // 既存のマーカーを一旦クリアしたい場合はここで map.eachLayer などで制御
-    
-    albumData.forEach((data, index) => {
-        // マーカーを地図に追加
-        const marker = L.marker([data.lat, data.lng]).addTo(map);
-        marker.bindPopup(`<img src="${data.img}" width="150">`);
-
-        // サイドバーのグリッドに追加
+    // 既存のマーカー削除（簡易実装のためリロード推奨だが、ここでは全描画）
+    albumData.forEach(item => {
+        const marker = L.marker([item.lat, item.lng]).addTo(map);
+        marker.bindPopup(`<img src="${item.src}" width="150">`);
         const img = document.createElement('img');
-        img.src = data.img;
+        img.src = item.src;
         img.className = 'album-img';
-        img.onclick = () => {
-            map.setView([data.lat, data.lng], 16);
-            marker.openPopup();
-        };
+        img.onclick = () => { map.setView([item.lat, item.lng], 15); marker.openPopup(); };
         grid.appendChild(img);
     });
 }
-
 function saveAlbum() { localStorage.setItem('album-data', JSON.stringify(albumData)); }
-function clearAlbum() { if(confirm('アルバムを全削除しますか？')) { albumData = []; saveAlbum(); location.reload(); } }
+function clearAlbum() { if(confirm('全データを削除しますか？')) { localStorage.removeItem('album-data'); location.reload(); } }
 
+// --- 4. ダイスロール (Enter 2回送信) ---
+let enterCount = 0;
+let enterTimer;
+document.getElementById('dice-command').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        enterCount++;
+        clearTimeout(enterTimer);
+        if (enterCount === 2) { rollDice(); enterCount = 0; }
+        else { enterTimer = setTimeout(() => { enterCount = 0; }, 400); }
+    }
+});
+
+function rollDice() {
+    const name = document.getElementById('user-name').value || "noname";
+    const cmd = document.getElementById('dice-command').value.trim();
+    if (!cmd) return;
+
+    let msg = cmd;
+    const choiceMatch = cmd.match(/choice\[(.*?)\]/);
+    const diceMatch = cmd.match(/^(\d+)d(\d+)([\+\-]\d+)?$/i);
+
+    if (choiceMatch) {
+        const items = choiceMatch[1].split(',').map(s => s.trim());
+        msg = `${cmd} ➔ <b>${items[Math.floor(Math.random()*items.length)]}</b>`;
+    } else if (diceMatch) {
+        const n = parseInt(diceMatch[1]), f = parseInt(diceMatch[2]), mod = diceMatch[3] ? parseInt(diceMatch[3]) : 0;
+        let res = [], sum = 0;
+        for(let i=0; i<n; i++){ let r = Math.floor(Math.random()*f)+1; res.push(r); sum+=r; }
+        msg = `${cmd} (${res.join(',')})${mod!=0?(mod>0?'+'+mod:mod):""} ➔ <b>${sum+mod}</b>`;
+    }
+
+    const div = document.createElement('div');
+    div.className = 'log-item';
+    div.innerHTML = `<div class="log-meta"><b>${name}</b></div><div class="log-msg">${msg}</div>`;
+    document.getElementById('chat-log').appendChild(div);
+    document.getElementById('dice-command').value = "";
+    localStorage.setItem('chat-log-save', document.getElementById('chat-log').innerHTML);
+}
+
+// 初期化
+window.onload = () => {
+    renderAlbum();
+    const savedLog = localStorage.getItem('chat-log-save');
+    if (savedLog) document.getElementById('chat-log').innerHTML = savedLog;
+};
+
+function togglePanel() {
+    const p = document.getElementById('side-panel');
+    p.classList.toggle('closed');
+}
 function searchRoute() {
-    const from = document.getElementById('station-from').value;
-    const to = document.getElementById('station-to').value;
-    if(!from || !to) return;
-    document.getElementById('route-result').innerHTML = `
-        <div style="font-size:0.8em; color:#888">経路候補</div>
-        ${from} → (詳細路線表示中) → ${to}<br>
-        <span style="color:#00d1ff">地図上の路線を確認してください</span>
-    `;
+    const f = document.getElementById('station-from').value;
+    const t = document.getElementById('station-to').value;
+    document.getElementById('transfer-info').innerText = `${f} から ${t} への経路を表示中...`;
 }
