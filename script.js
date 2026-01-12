@@ -1,5 +1,3 @@
-script.js
-
 // 1. 地図の初期設定（東京を中心に表示）
 const map = L.map('map').setView([35.6895, 139.6917], 5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -29,3 +27,4 @@ function rollDice() {
 function closeAlbum() {
     document.getElementById('album-modal').classList.add('hidden');
 }
+
