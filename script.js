@@ -1,47 +1,34 @@
 // --- 1. 地図・タイル設定 ---
-const darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'Dark' });
-// 路線図用タイル (ThunderforestなどはAPIキーが必要なため、公共のCartoDBベースを推奨)
-const lightMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: 'Light' });
+// ベースのダークマップ
+const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'Dark' });
+// 詳細路線図レイヤー (OpenRailwayMap)
+const railwayTiles = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: 'Railway'
+});
 
 const map = L.map('map', { 
-    layers: [darkMap],
+    layers: [darkTiles],
     zoomControl: false 
 }).setView([35.6812, 139.7671], 12);
 L.control.zoom({ position: 'topleft' }).addTo(map);
 
-// GoogleマイマップIDとKML同期
-const myMapId = '1zYjVv1_NfN_WkS5k5fW1X4X-fWk'; 
-async function syncMyMap() {
-    // 注: 実際の公開KML URL。CORS回避のためプロキシを使用
-    const kmlUrl = `https://www.google.com/maps/d/kml?mid=${myMapId}&forcekml=1`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(kmlUrl)}`;
-
-    try {
-        const res = await fetch(proxyUrl);
-        const kmlText = await res.text();
-        const parser = new DOMParser();
-        const kmlDom = parser.parseFromString(kmlText, 'text/xml');
-        const track = new L.KML(kmlDom);
-        map.addLayer(track);
-        
-        // マイマップの場所をクリックした時の情報表示を強化
-        track.on('add', function() {
-            const bounds = track.getBounds();
-            if (bounds.isValid()) map.fitBounds(bounds);
-        });
-    } catch (e) { console.warn("MyMap Sync Error: Check if ID is public", e); }
-}
-syncMyMap();
-
-// アルバム用：最後にクリックした座標
 let lastLatLng = null;
+let albumData = JSON.parse(localStorage.getItem('album-data')) || [];
+
+// 起動時にアルバムデータを復元
+window.addEventListener('load', () => {
+    loadChatLog();
+    renderAlbum();
+});
+
 map.on('click', (e) => {
     lastLatLng = e.latlng;
     document.getElementById('selected-pos-info').innerText = `選択中: ${lastLatLng.lat.toFixed(4)}, ${lastLatLng.lng.toFixed(4)}`;
     L.popup().setLatLng(e.latlng).setContent("この場所に写真を紐付けます").openOn(map);
 });
 
-// --- 2. ダイス機能 (choice対応) ---
+// --- 2. ダイス機能 ---
 let enterCount = 0;
 let enterTimer;
 
@@ -54,7 +41,7 @@ document.getElementById('dice-command').addEventListener('keydown', (e) => {
             rollDice();
             enterCount = 0;
         } else {
-            enterTimer = setTimeout(() => { enterCount = 0; }, 500);
+            enterTimer = setTimeout(() => { enterCount = 0; }, 400);
         }
     }
 });
@@ -65,26 +52,20 @@ function rollDice() {
     if (!cmd) return;
 
     let msg = cmd;
-
-    // 1. choice機能: choice[A,B,C]
-    if (cmd.startsWith('choice[')) {
+    if (cmd.includes('choice[')) {
         const match = cmd.match(/choice\[(.*?)\]/);
         if (match) {
             const items = match[1].split(',').map(s => s.trim());
             const picked = items[Math.floor(Math.random() * items.length)];
             msg = `${cmd} ➔ <b>${picked}</b>`;
         }
-    } 
-    // 2. 通常ダイス: 1d100+10
-    else {
+    } else if (cmd.match(/^(\d+)d(\d+)([\+\-]\d+)?$/i)) {
         const match = cmd.match(/^(\d+)d(\d+)([\+\-]\d+)?$/i);
-        if (match) {
-            const n = parseInt(match[1]), f = parseInt(match[2]);
-            const mod = match[3] ? parseInt(match[3]) : 0;
-            let res = [], sum = 0;
-            for(let i=0; i<n; i++){ let r = Math.floor(Math.random()*f)+1; res.push(r); sum+=r; }
-            msg = `${cmd} (${res.join(',')})${mod!=0?(mod>0?'+'+mod:mod):""} ➔ <b>${sum+mod}</b>`;
-        }
+        const n = parseInt(match[1]), f = parseInt(match[2]);
+        const mod = match[3] ? parseInt(match[3]) : 0;
+        let res = [], sum = 0;
+        for(let i=0; i<n; i++){ let r = Math.floor(Math.random()*f)+1; res.push(r); sum+=r; }
+        msg = `${cmd} (${res.join(',')})${mod!=0?(mod>0?'+'+mod:mod):""} ➔ <b>${sum+mod}</b>`;
     }
 
     appendLog(name, msg);
@@ -104,29 +85,27 @@ function appendLog(name, msg) {
     `;
     log.appendChild(div);
     document.querySelector('.panel-main').scrollTop = log.scrollHeight;
-    saveLog();
+    saveChatLog();
 }
 
-function saveLog() { localStorage.setItem('chat-log-data', document.getElementById('chat-log').innerHTML); }
-function deleteLog(btn) { if(confirm('ログを削除しますか？')) { btn.closest('.log-item').remove(); saveLog(); } }
-window.onload = () => { 
+function saveChatLog() { localStorage.setItem('chat-log-data', document.getElementById('chat-log').innerHTML); }
+function loadChatLog() {
     const saved = localStorage.getItem('chat-log-data');
     if (saved) document.getElementById('chat-log').innerHTML = saved;
-};
+}
+function deleteLog(btn) { if(confirm('ログを削除しますか？')) { btn.closest('.log-item').remove(); saveChatLog(); } }
 
-// --- 3. タブ・UI制御 ---
+// --- 3. タブ・路線図切り替え ---
 function switchTab(id) {
     document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById('tab-'+id).classList.add('active');
     event.currentTarget.classList.add('active');
 
-    // 路線図タブの時は地図を明るく（路線を見やすく）する
+    // 路線図タブの場合、黒基調のまま詳細路線タイルを重ねる
     if (id === 'transit') {
-        map.removeLayer(darkMap);
-        lightMap.addTo(map);
+        if (!map.hasLayer(railwayTiles)) railwayTiles.addTo(map);
     } else {
-        map.removeLayer(lightMap);
-        darkMap.addTo(map);
+        if (map.hasLayer(railwayTiles)) map.removeLayer(railwayTiles);
     }
 }
 
@@ -138,46 +117,61 @@ function togglePanel() {
     b.style.right = p.classList.contains('closed') ? '10px' : '360px';
 }
 
-// --- 4. 路線検索UIロジック ---
-function searchRoute() {
-    const from = document.getElementById('station-from').value;
-    const to = document.getElementById('station-to').value;
-    if(!from || !to) return;
-    // ここにAPI連携を入れる。現在はUIデモとして表示
-    document.getElementById('route-result').innerHTML = `
-        <div style="font-size:0.8em; color:#888">経路候補</div>
-        ${from} → (JR山手線) → ${to}<br>
-        <span style="color:#fff">所要時間: 約15分 / 200円</span>
-    `;
-}
-
-// --- 5. 写真紐付けアルバム ---
+// --- 4. アルバム（永続化対応） ---
 const dz = document.getElementById('drop-zone');
-dz.ondragover = e => { e.preventDefault(); dz.style.borderColor = "#00d1ff"; };
-dz.ondragleave = () => { dz.style.borderColor = "#333"; };
+dz.ondragover = e => e.preventDefault();
 dz.ondrop = e => {
     e.preventDefault();
-    dz.style.borderColor = "#333";
-    if (!lastLatLng) { alert("先に地図上の場所をクリックしてください"); return; }
-
+    if (!lastLatLng) { alert("地図をクリックして場所を決めてください"); return; }
+    
     Array.from(e.dataTransfer.files).forEach(f => {
         const r = new FileReader();
         r.onload = ev => {
-            const imgSrc = ev.target.result;
-            // 地図にマーカー設置
-            const marker = L.marker(lastLatLng).addTo(map);
-            marker.bindPopup(`<img src="${imgSrc}" width="150"><br>登録地点`).openPopup();
-            
-            // アルバムに追加
-            const img = document.createElement('img');
-            img.src = imgSrc;
-            img.className = 'album-img';
-            img.onclick = () => {
-                map.setView(marker.getLatLng(), 15);
-                marker.openPopup();
+            const newItem = {
+                lat: lastLatLng.lat,
+                lng: lastLatLng.lng,
+                img: ev.target.result // Base64形式で保存
             };
-            document.getElementById('album-grid').appendChild(img);
+            albumData.push(newItem);
+            saveAlbum();
+            renderAlbum();
         };
         r.readAsDataURL(f);
     });
 };
+
+function renderAlbum() {
+    const grid = document.getElementById('album-grid');
+    grid.innerHTML = "";
+    // 既存のマーカーを一旦クリアしたい場合はここで map.eachLayer などで制御
+    
+    albumData.forEach((data, index) => {
+        // マーカーを地図に追加
+        const marker = L.marker([data.lat, data.lng]).addTo(map);
+        marker.bindPopup(`<img src="${data.img}" width="150">`);
+
+        // サイドバーのグリッドに追加
+        const img = document.createElement('img');
+        img.src = data.img;
+        img.className = 'album-img';
+        img.onclick = () => {
+            map.setView([data.lat, data.lng], 16);
+            marker.openPopup();
+        };
+        grid.appendChild(img);
+    });
+}
+
+function saveAlbum() { localStorage.setItem('album-data', JSON.stringify(albumData)); }
+function clearAlbum() { if(confirm('アルバムを全削除しますか？')) { albumData = []; saveAlbum(); location.reload(); } }
+
+function searchRoute() {
+    const from = document.getElementById('station-from').value;
+    const to = document.getElementById('station-to').value;
+    if(!from || !to) return;
+    document.getElementById('route-result').innerHTML = `
+        <div style="font-size:0.8em; color:#888">経路候補</div>
+        ${from} → (詳細路線表示中) → ${to}<br>
+        <span style="color:#00d1ff">地図上の路線を確認してください</span>
+    `;
+}
