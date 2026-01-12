@@ -1,10 +1,14 @@
+/* 基本スタイル */
 body { margin: 0; overflow: hidden; background: #000; font-family: "Helvetica Neue", Arial, sans-serif; color: #eee; }
-#map { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 1; background: #0b0d0f; }
+#map { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 1; background: #000; }
+
+/* 路線図タイルの視認性調整（少し透過させるとダークマップと馴染みます） */
+.leaflet-tile-pane { filter: brightness(0.8) contrast(1.2); }
 
 /* サイドパネル */
 #side-panel {
     position: absolute; right: 0; top: 0; width: 350px; height: 100vh;
-    background: rgba(20, 20, 20, 0.95); border-left: 1px solid #333;
+    background: rgba(15, 15, 15, 0.98); border-left: 1px solid #333;
     display: flex; flex-direction: column; z-index: 10; transition: transform 0.3s ease;
 }
 #side-panel.closed { transform: translateX(100%); }
@@ -14,45 +18,31 @@ body { margin: 0; overflow: hidden; background: #000; font-family: "Helvetica Ne
 }
 
 /* タブ */
-.panel-tabs { display: flex; background: #0a0a0a; border-bottom: 1px solid #333; }
-.tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; color: #666; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: 0.2s; }
-.tab-btn.active { color: #00d1ff; border-bottom: 2px solid #00d1ff; background: #141414; }
+.panel-tabs { display: flex; background: #050505; border-bottom: 1px solid #333; }
+.tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; color: #555; cursor: pointer; font-size: 0.8em; font-weight: bold; }
+.tab-btn.active { color: #00d1ff; border-bottom: 2px solid #00d1ff; background: #0f0f0f; }
 
 .panel-main { flex: 1; overflow-y: auto; padding: 15px; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* ダイスログ */
-.log-item { position: relative; background: #1a1a1a; padding: 12px; border-radius: 4px; border-left: 3px solid #00d1ff; margin-bottom: 10px; animation: fadeIn 0.3s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+/* ログ */
+.log-item { position: relative; background: #111; padding: 12px; border-radius: 4px; border: 1px solid #222; border-left: 3px solid #00d1ff; margin-bottom: 10px; }
 .log-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
 .log-name { font-size: 0.85em; color: #00d1ff; font-weight: bold; }
-.log-time { font-size: 0.7em; color: #555; }
-.log-msg { font-size: 0.9em; line-height: 1.5; color: #ddd; }
-.delete-btn { position: absolute; right: 8px; top: 8px; display: none; background: none; border: none; color: #555; cursor: pointer; font-size: 0.7em; }
+.log-time { font-size: 0.7em; color: #444; }
+.log-msg { font-size: 0.9em; line-height: 1.5; }
+.delete-btn { position: absolute; right: 8px; top: 8px; display: none; background: none; border: none; color: #444; cursor: pointer; font-size: 0.7em; }
 .log-item:hover .delete-btn { display: block; }
-.delete-btn:hover { color: #ff4d4d; }
-
-/* 路線検索UI */
-.transit-card { background: #111; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
-.transit-card header { background: #222; padding: 8px; font-size: 0.7em; letter-spacing: 1px; color: #888; border-bottom: 1px solid #333; }
-.info-group { padding: 10px; border-bottom: 1px solid #222; }
-.info-group label { display: block; font-size: 0.6em; color: #555; margin-bottom: 4px; }
-.station-input { background: #000; border: 1px solid #333; color: #00d1ff; width: 90%; padding: 5px; border-radius: 3px; }
-.search-btn { width: 100%; padding: 10px; background: #333; border: none; color: #fff; cursor: pointer; font-size: 0.8em; }
-.search-btn:hover { background: #444; }
-#route-result { padding: 15px; font-size: 0.9em; min-height: 50px; color: #00d1ff; }
 
 /* アルバム */
-#selected-pos-info { font-size: 0.75em; color: #888; margin-bottom: 10px; padding: 5px; border-left: 2px solid #00d1ff; }
-#drop-zone { border: 2px dashed #333; padding: 30px; text-align: center; color: #555; font-size: 0.8em; border-radius: 8px; transition: 0.3s; }
-#drop-zone:hover { border-color: #00d1ff; color: #00d1ff; }
-#album-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
-.album-img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #333; }
+#drop-zone { border: 2px dashed #222; padding: 25px; text-align: center; color: #444; font-size: 0.8em; border-radius: 8px; }
+#album-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.album-img { width: 100%; height: 90px; object-fit: cover; border-radius: 4px; cursor: pointer; opacity: 0.8; transition: 0.2s; }
+.album-img:hover { opacity: 1; border: 1px solid #00d1ff; }
 
-/* 下部入力エリア */
-.dice-input-wrapper { background: #0a0a0a; padding: 15px; border-top: 1px solid #333; }
-#user-name { background: transparent; border: none; color: #555; border-bottom: 1px solid #333; width: 80px; margin-bottom: 10px; outline: none; font-size: 0.8em; }
-.input-main { display: flex; gap: 10px; }
-#dice-command { flex: 1; height: 50px; background: #111; border: 1px solid #333; color: #fff; border-radius: 4px; padding: 8px; resize: none; font-size: 0.9em; outline: none; }
-#send-btn { background: #0078ff; color: #fff; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+/* 入力エリア */
+.dice-input-wrapper { background: #050505; padding: 15px; border-top: 1px solid #222; }
+#user-name { background: transparent; border: none; color: #444; border-bottom: 1px solid #222; width: 80px; margin-bottom: 8px; outline: none; }
+#dice-command { width: 100%; box-sizing: border-box; height: 50px; background: #0a0a0a; border: 1px solid #222; color: #fff; border-radius: 4px; padding: 8px; resize: none; outline: none; }
+#send-btn { margin-top: 10px; width: 100%; background: #0078ff; color: #fff; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
