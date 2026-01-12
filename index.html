@@ -47,9 +47,14 @@
             </div>
         </section>
 
-        <div class="dice-input-wrapper">
-    <textarea id="dice-command" placeholder="1d10+13&#13;&#10;choice{八王子,大宮}" rows="3"></textarea>
-    <button onclick="rollDice()">送信</button>
+     <div class="dice-input-wrapper">
+    <div class="dice-toolbar">
+        <span>▲</span><span>□</span><span>◇</span><span>偏</span><span>核</span>
+    </div>
+    <div class="input-area-main">
+        <textarea id="dice-command" placeholder="メッセージを入力" rows="3"></textarea>
+        <button id="send-btn" onclick="rollDice()">送信</button>
+    </div>
 </div>
     </aside>
 
@@ -65,5 +70,6 @@
     </script>
 </body>
 </html>
+
 
 
