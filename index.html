@@ -1,30 +1,69 @@
-<aside id="side-panel">
-    <nav class="panel-tabs">
-        <button class="tab-btn active" onclick="switchTab('main')">ログ</button>
-        <button class="tab-btn" onclick="switchTab('transit')">移動情報</button>
-    </nav>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Travel Log Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://plugins.github.io/Leaflet.KML/L.KML.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { margin: 0; display: flex; background: #000; color: #fff; font-family: sans-serif; }
+        #map { flex: 1; height: 100vh; }
+        #side-panel { width: 350px; background: #1a1a1a; display: flex; flex-direction: column; border-left: 1px solid #333; }
+        /* タブ切り替え用の基本スタイル */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; flex: 1; overflow-y: auto; }
+        .tab-btn { cursor: pointer; padding: 10px; background: #222; color: #ccc; border: none; flex: 1; }
+        .tab-btn.active { background: #333; color: #fff; border-bottom: 2px solid #0078ff; }
+        .panel-tabs { display: flex; }
+    </style>
+</head>
+<body>
 
-    <section id="tab-main" class="tab-content active">
-        <div id="chat-log"></div>
-    </section>
+    <div id="map"></div>
 
-    <section id="tab-transit" class="tab-content">
-        <div class="transit-card">
-            <header>ROUTE INFO</header>
-            <div class="info-group">
-                <label>STATUS</label>
-                <div id="train-type" class="data-value">-</div>
+    <aside id="side-panel">
+        <nav class="panel-tabs">
+            <button class="tab-btn active" onclick="switchTab('main')">ログ/ダイス</button>
+            <button class="tab-btn" onclick="switchTab('transit')">移動情報</button>
+        </nav>
+
+        <section id="tab-main" class="tab-content active">
+            <div id="chat-log"></div>
+        </section>
+
+        <section id="tab-transit" class="tab-content">
+            <div class="transit-card">
+                <header style="padding: 10px; color: #888; font-size: 0.8em;">ROUTE INFO</header>
+                <div style="padding: 0 15px;">
+                    <label style="font-size: 0.7em; color: #555;">STATUS</label>
+                    <div id="train-type" style="font-size: 1.2em; margin-bottom: 15px;">-</div>
+                    <label style="font-size: 0.7em; color: #555;">TRANSFER</label>
+                    <div id="transfer-info" style="font-size: 1.2em; margin-bottom: 15px;">-</div>
+                    <div id="station-tips" style="color: #aaa; font-size: 0.9em; border-top: 1px solid #333; padding-top: 10px;">
+                        準備完了
+                    </div>
+                </div>
             </div>
-            <div class="info-group">
-                <label>TRANSFER</label>
-                <div id="transfer-info" class="data-value">-</div>
-            </div>
-            <div id="station-tips" class="memo-area">ダイスを振ってルートを決定してください。</div>
+        </section>
+
+        <div class="dice-input-wrapper">
+            <input type="text" id="dice-command" placeholder="1d10+13, choice{八王子,大宮}">
+            <button onclick="rollDice()">送信</button>
         </div>
-    </section>
+    </aside>
 
-    <div class="dice-input-wrapper">
-        <input type="text" id="dice-command" placeholder="1d10+13, choice{八王子,大宮}">
-        <button onclick="rollDice()">送信</button>
-    </div>
-</aside>
+    <script src="script.js"></script>
+    <script>
+        // タブ切り替え関数
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
