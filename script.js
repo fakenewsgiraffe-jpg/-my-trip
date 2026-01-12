@@ -113,3 +113,70 @@ window.onload = () => {
     document.getElementById('chat-log').innerHTML = load('v7_log') || "";
     renderAlbum();
 };
+
+// --- 1. カラー定義 ---
+const RAIL_COLORS = {
+    "山手線": "#b1cb39",
+    "中央快速線": "#F15A22",
+    "東海道線": "#F0862B",
+    // ... 他のすべての色をここに配置
+    "default": "#888888"
+};
+
+// --- 2. 路線図(GeoJSON)の描画関数 ---
+async function loadRailwayVector() {
+    // 注: 実際には鉄道データのGeoJSONファイル(N02-23_RailroadSection.json等)が必要です
+    try {
+        const response = await fetch('path/to/your/railway_data.json');
+        const data = await response.json();
+
+        L.geoJson(data, {
+            style: function(feature) {
+                // データのプロパティ名（例: N02_003）に合わせて色を選択
+                const lineName = feature.properties.N02_003; 
+                return {
+                    color: RAIL_COLORS[lineName] || RAIL_COLORS["default"],
+                    weight: 3,
+                    opacity: 0.8
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                layer.bindPopup(feature.properties.N02_003); // 路線名を表示
+            }
+        }).addTo(map);
+    } catch (e) {
+        console.error("路線データの読み込みに失敗しました。ファイルパスを確認してください。");
+    }
+}
+
+// --- 3. Googleマイマップ連携 ---
+function loadGoogleMyMap(kmlUrl) {
+    // URLが共有用の場合はKML出力用に変換
+    const exportUrl = kmlUrl.replace(/\/edit\?usp=sharing/, '/kml?forcekml=1');
+    
+    // omnivoreを使用してKMLを解析し、地図に追加
+    const runLayer = omnivore.kml(exportUrl)
+        .on('ready', function() {
+            map.fitBounds(runLayer.getBounds()); // データに合わせてズーム
+            console.log("MyMap loaded!");
+        })
+        .addTo(map);
+}
+
+// --- 4. タブ切替の拡張 ---
+function switchTab(id) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${id}`).classList.add('active');
+    document.getElementById(`tab-btn-${id}`).classList.add('active');
+
+    if (id === 'transit') {
+        map.removeLayer(tiles.light);
+        tiles.dark.addTo(map);
+        // ここでOpenRailwayMapの代わりに独自のベクトルタイルやGeoJSONを表示
+        loadRailwayVector(); 
+    } else {
+        map.removeLayer(tiles.dark);
+        tiles.light.addTo(map);
+    }
+}
