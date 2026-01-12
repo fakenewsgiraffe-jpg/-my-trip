@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traveler's Tool - Pro</title>
+    <title>Traveler's Tool - Pro v1.1</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
@@ -43,6 +43,10 @@
             <section id="tab-album" class="tab-content">
                 <div id="selected-pos-info">地図をクリックして地点を選択</div>
                 <div id="drop-zone">ここに写真をドロップして登録</div>
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                    <span style="font-size: 0.7em; color: #666;">ALBUM LOG</span>
+                    <button onclick="clearAlbum()" style="background:none; border:none; color:#ff4d4d; cursor:pointer; font-size:0.7em;">全削除</button>
+                </div>
                 <div id="album-grid"></div>
             </section>
         </div>
@@ -52,7 +56,7 @@
                 <input type="text" id="user-name" value="DL" placeholder="名前">
             </div>
             <div class="input-main">
-                <textarea id="dice-command" placeholder="1d100 / choice[表,裏] (Enter2回)"></textarea>
+                <textarea id="dice-command" placeholder="1d100 / choice[右,左] (Enter2回)"></textarea>
                 <button id="send-btn" onclick="rollDice()">送信</button>
             </div>
         </div>
