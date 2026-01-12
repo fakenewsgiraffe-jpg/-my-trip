@@ -1,22 +1,42 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta name="robots" content="noindex, nofollow">    
     <meta charset="UTF-8">
-    <title>マイ旅行マップ</title>
+    <meta name="robots" content="noindex, nofollow">
+    <title>ダイスの旅記録</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
 
-    <h1>🌍 私の旅行記録マップ</h1>
+    <h1>ダイスの旅</h1>
     
-    <div id="dice-area">
-        <button onclick="rollDice()">🎲 旅の運勢ダイスを振る</button>
-        <span id="dice-result">?</span>
-    </div>
+    <div id="main-container">
+        <div id="left-panel">
+            <div id="dice-area">
+                <input type="text" id="dice-input" placeholder="例: 2d10, choice{表,裏}">
+                <button onclick="rollDice()">ダイスを振る</button>
+                <div id="dice-result"></div>
+                
+                <div id="dice-log-container">
+                    <strong>ダイスログ</strong>
+                    <div id="dice-log"></div>
+                </div>
+            </div>
 
-    <div id="map"></div>
+            <div id="map"></div>
+        </div>
+
+        <div id="right-panel">
+            <h3>次の移動情報</h3>
+            <div class="info-box">
+                <p><strong>路線:</strong> <span id="train-type">-</span></p>
+                <p><strong>乗換:</strong> <span id="transfer-info">-</span></p>
+                <hr>
+                <p id="station-tips">ダイスを振って進みましょう。</p>
+            </div>
+        </div>
+    </div>
 
     <div id="album-modal" class="hidden">
         <div class="modal-content">
@@ -27,13 +47,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-kml/L.KML.js"></script>
     <script src="script.js"></script>
 </body>
-
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-　　<script src="https://unpkg.com/leaflet-kml/L.KML.js"></script>
-　　<script src="script.js"></script>
-    
 </html>
-
-
