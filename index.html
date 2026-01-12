@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traveler's Tool Final v2</title>
+    <title>Traveler's Tool Final v3</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
@@ -22,35 +22,29 @@
             <section id="tab-main" class="tab-content active">
                 <div id="chat-log"></div>
             </section>
-
             <section id="tab-transit" class="tab-content">
                 <div class="transit-card">
                     <header>ROUTE SEARCH</header>
                     <div class="info-group">
-                        <label>FROM</label>
-                        <input type="text" id="station-from" placeholder="出発駅" class="st-input">
-                    </div>
-                    <div class="info-group">
-                        <label>TO</label>
-                        <input type="text" id="station-to" placeholder="到着駅" class="st-input">
+                        <label>FROM</label><input type="text" id="st-from" class="st-input" placeholder="出発駅">
+                        <label style="margin-top:8px">TO</label><input type="text" id="st-to" class="st-input" placeholder="到着駅">
                     </div>
                     <button class="search-btn" onclick="searchRoute()">経路検索表示</button>
-                    <div id="route-result" class="data-value">-</div>
+                    <div id="route-res" class="data-value">-</div>
                 </div>
             </section>
-
             <section id="tab-album" class="tab-content">
                 <div id="pos-display">地図をクリックして地点を選択</div>
-                <div id="drop-zone">写真をドロップして登録</div>
+                <div id="drop-zone">写真をドロップ</div>
                 <div id="album-grid"></div>
-                <button class="clear-btn" onclick="clearAllData()">全データをリセット</button>
+                <button class="clear-btn" onclick="clearData()">リセット</button>
             </section>
         </div>
 
         <div class="dice-input-wrapper">
-            <input type="text" id="user-name" value="noname" placeholder="名前">
+            <input type="text" id="user-name" value="noname">
             <div class="input-main">
-                <textarea id="dice-command" placeholder="メッセージを入力 (Enter2回で送信)"></textarea>
+                <textarea id="dice-command" placeholder="メッセージを入力(Enter×2)"></textarea>
                 <button id="send-btn" onclick="rollDice()">送信</button>
             </div>
         </div>
