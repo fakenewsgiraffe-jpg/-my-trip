@@ -59,3 +59,10 @@
     cursor: pointer;
 }
 
+// Shift+Enterは改行、Enterのみは送信にする設定
+document.getElementById('dice-command').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        rollDice();
+    }
+});
