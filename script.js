@@ -56,17 +56,41 @@ function rollDice() {
         document.getElementById('dice-command').value = ""; // 入力欄を空に
     }
 }
-
+// --- ログの追加（蓄積されるようになります） ---
 function addLog(msg) {
     const log = document.getElementById('chat-log');
     const item = document.createElement('div');
     item.className = 'log-item';
+    
+    // 時刻とメッセージを構成
+    const now = new Date();
+    const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
     item.innerHTML = `
-        <div class="log-header"><span>Traveler</span><span>${new Date().toLocaleTimeString()}</span></div>
-        <div class="log-msg">${msg}</div>
+        <div style="font-size: 0.7em; color: #888; margin-bottom: 4px;">Traveler - ${timeStr}</div>
+        <div class="log-msg" style="word-break: break-all;">${msg}</div>
     `;
+    
+    // ログの先頭（見た目上の上部）に追加
     log.prepend(item);
 }
+
+// --- 自動更新対応の読み込み部分 ---
+// 拡張子がkmzの場合は、ライブラリが自動で解凍して読み込みます
+const kmlUrl = 'spots.kmz'; 
+
+fetch(kmlUrl)
+    .then(res => res.blob())
+    .then(blob => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const track = new L.KML(new DOMParser().parseFromString(e.target.result, 'text/xml'));
+            map.addLayer(track);
+        };
+        // KMZ(Zip形式)を扱う場合は別途ライブラリが必要なことが多いため、
+        // もし動かなければ「KMLにエクスポート」で出した単体KMLを使うのが確実です。
+    });
+
 
 // 移動情報更新
 function updateTransit(val) {
@@ -76,8 +100,4 @@ function updateTransit(val) {
     document.getElementById('station-tips').innerText = `${val}駅先周辺の情報をチェックしています...`;
 }
 
-// KML読み込み
-fetch('spots.kml').then(r => r.text()).then(t => {
-    const track = new L.KML(new DOMParser().parseFromString(t, 'text/xml'));
-    map.addLayer(track);
-});
+
