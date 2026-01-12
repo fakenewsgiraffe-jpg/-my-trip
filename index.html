@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traveler's Tool - Pro v1.2</title>
+    <title>Traveler's Tool Pro v1.3</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
@@ -14,9 +14,9 @@
 
     <aside id="side-panel">
         <nav class="panel-tabs">
-            <button class="tab-btn active" onclick="switchTab('main')">ダイスログ</button>
-            <button class="tab-btn" onclick="switchTab('transit')">路線図</button>
-            <button class="tab-btn" onclick="switchTab('album')">情報</button>
+            <button id="tab-btn-main" class="tab-btn active" onclick="switchTab('main')">ダイスログ</button>
+            <button id="tab-btn-transit" class="tab-btn" onclick="switchTab('transit')">路線</button>
+            <button id="tab-btn-album" class="tab-btn" onclick="switchTab('album')">情報</button>
         </nav>
 
         <div class="panel-main">
@@ -26,29 +26,24 @@
 
             <section id="tab-transit" class="tab-content">
                 <div class="transit-card">
-                    <header>ROUTE INFO</header>
+                    <header>ROUTE SEARCH</header>
                     <div class="info-group">
-                        <label>STATUS</label>
-                        <div id="train-type" class="data-value">NORMAL</div>
+                        <label>FROM</label>
+                        <input type="text" id="station-from" placeholder="出発駅" class="st-input">
                     </div>
                     <div class="info-group">
-                        <label>TRANSFER / FROM-TO</label>
-                        <div class="input-row">
-                            <input type="text" id="station-from" placeholder="出発" class="st-input">
-                            <span>→</span>
-                            <input type="text" id="station-to" placeholder="到着" class="st-input">
-                        </div>
-                        <button class="search-btn" onclick="searchRoute()">経路検索</button>
+                        <label>TO</label>
+                        <input type="text" id="station-to" placeholder="到着駅" class="st-input">
                     </div>
-                    <div id="transfer-info" class="data-value">-</div>
+                    <button class="search-btn" onclick="searchRoute()">経路検索表示</button>
+                    <div id="route-result" class="data-value">-</div>
                 </div>
             </section>
 
             <section id="tab-album" class="tab-content">
                 <div id="pos-display">地図をクリックして地点を選択</div>
-                <div id="drop-zone">写真をドラッグ＆ドロップ</div>
+                <div id="drop-zone">ここに写真をドロップして登録</div>
                 <div id="album-grid"></div>
-                <button class="clear-btn" onclick="clearAlbum()">アルバムをリセット</button>
             </section>
         </div>
 
@@ -57,14 +52,13 @@
                 <input type="text" id="user-name" value="noname" placeholder="名前">
             </div>
             <div class="input-main">
-                <textarea id="dice-command" placeholder="メッセージを入力（Enter2回で送信）"></textarea>
+                <textarea id="dice-command" placeholder="メッセージを入力（Enter2回）"></textarea>
                 <button id="send-btn" onclick="rollDice()">送信</button>
             </div>
         </div>
     </aside>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://plugins.github.io/Leaflet.KML/L.KML.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
