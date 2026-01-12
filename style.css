@@ -1,189 +1,45 @@
-/** * Traveler's Tool - Core System
- * 30年ベテラン仕様：全機能統合型
- */
+/* ベースレイアウト */
+body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; font-family: "Hiragino Kaku Gothic ProN", sans-serif; }
+#map { width: 100%; height: 100%; position: absolute; z-index: 1; }
 
-// 1. 鉄道カラー定義（全指定を完全反映）
-const RAIL_COLORS = {
-    "東海道線": "#F0862B", "伊東線": "#008803", "上野東京ライン": "#91278F", "横須賀線,総武快速線": "#007AC1", "湘南新宿ライン": "#E31F26", "京浜東北線,根岸線": "#00B2E5", "横浜線": "#80C342", "南武線,鶴見線": "#FFD400", "山手線": "#b1cb39", "中央快速線,青梅線,五日市線": "#F15A22", "中央・総武線": "#FFD400", "宇都宮線,高崎線": "#F68B1E", "埼京・川越線": "#00AC84", "JR・相鉄直通線": "#002971", "常磐快速線": "#36AE6E", "常磐緩行線": "#339999", "京葉線": "#C9252F", "武蔵野線": "#F15A22", "総武本線": "#FFD400", "成田線": "#00B261", "成田線我孫子支線": "#36AE6E", "内房線": "#00B2E5", "外房線": "#DB4028", "相模線": "#009793", "信越本線": "#00AAEE", "白新線": "#F387B7", "東北本線(東北エリア)": "#3CB371", "羽越本線": "#16C0E9", "磐越西線": "#CB7B35", "只見線": "#008DD1", "仙石線": "#00AAEE", "仙山線": "#72BC4A", "JR東海": "#ED6D00", "東海道新幹線": "#0072BA", "御殿場線": "#40743C", "飯田線": "#75A2DB", "東京メトロ": "#00A3D9", "丸ノ内線": "#F62E36", "銀座線": "#FF9500", "東西線": "#009BBF", "千代田線": "#00BB85", "副都心線": "#9C5E31", "都営地下鉄": "#199332", "大江戸線": "#CE045B", "横浜市営ブルーライン": "#0070C0", "横浜市営グリーンライン": "#00B050", "東武鉄道": "#005BAC", "スカイツリーライン": "#0F6CC3", "伊勢崎線": "#FF0000", "西武池袋線": "#FF6600", "西武新宿線": "#0099CC", "京王電鉄": "#C8006B", "京王井の頭線": "#00377E", "小田急電鉄": "#0D82C7", "東急電鉄": "#DA0442", "東急東横線": "#DA0442", "東急田園都市線": "#20A288", "京急電鉄": "#00A3E4", "相模鉄道": "#000080", "りんかい線": "#00418E", "つくばエクスプレス": "#000080", "東葉高速線": "#3FB036", "みなとみらい線": "#09357F", "多摩都市モノレール線": "#E97119", "ゆりかもめ": "#E97119"
-};
+/* サイドパネル */
+#side-panel { position: fixed; right: 0; top: 0; width: 350px; height: 100%; background: rgba(10, 10, 10, 0.98); display: flex; flex-direction: column; transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1); z-index: 1000; border-left: 1px solid #333; color: #fff; }
+#side-panel.closed { transform: translateX(350px); }
 
-let map, tiles, railLayer, stationLayer, lastPos = null;
+/* タブデザイン */
+.panel-tabs { display: flex; background: #000; border-bottom: 1px solid #3399ff; }
+.tab-btn { flex: 1; padding: 15px 5px; background: none; border: none; color: #666; cursor: pointer; font-size: 11px; letter-spacing: 1px; }
+.tab-btn.active { color: #3399ff; box-shadow: inset 0 -2px 0 #3399ff; font-weight: bold; }
 
-// 2. 地図の初期化
-function initSystem() {
-    tiles = {
-        light: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '©OSM' }),
-        dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '©OSM' })
-    };
+/* コンテンツエリア */
+.tab-content { display: none; flex-grow: 1; overflow-y: auto; padding: 15px; scrollbar-width: thin; scrollbar-color: #333 #000; }
+.tab-content.active { display: block; }
 
-    map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([35.6812, 139.7671], 12);
-    tiles.light.addTo(map);
-    L.control.zoom({ position: 'topleft' }).addTo(map);
+/* ダイスログ・削除ボタン */
+.log-item { position: relative; padding: 12px 10px; border-bottom: 1px solid #222; }
+.log-item:hover { background: rgba(255, 255, 255, 0.05); }
+.delete-btn { position: absolute; right: 10px; top: 10px; font-size: 10px; color: #555; cursor: pointer; opacity: 0; transition: 0.2s; }
+.log-item:hover .delete-btn { opacity: 1; }
+.delete-btn:hover { color: #ff4d4d; }
 
-    // 地図クリックで地点選択
-    map.on('click', e => {
-        lastPos = e.latlng;
-        L.popup().setLatLng(e.latlng).setContent("アルバム登録：画像をドロップ").openOn(map);
-        const display = document.getElementById('pos-display');
-        if(display) display.innerText = `選択中: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
-    });
-
-    loadGeoData();
-    restoreLogs();
-    renderAlbum();
+/* --- 120点のボタンデザイン --- */
+#send-btn, .clear-btn-full, .search-btn { 
+    background: #ffffff !important; color: #000000 !important; 
+    border: none; font-weight: 800; padding: 10px; 
+    border-radius: 4px; cursor: pointer; transition: 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
+#send-btn:hover { background: #dddddd !important; transform: translateY(-1px); }
 
-// 3. 鉄道・駅データの読み込み (5MB~16MB対応)
-async function loadGeoData() {
-    try {
-        const res = await fetch('railway.json');
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        
-        // 路線描画
-        railLayer = L.geoJson(data, {
-            filter: f => f.properties.N02_003,
-            style: f => ({
-                color: RAIL_COLORS[f.properties.N02_003] || "#555",
-                weight: 3, opacity: 0.8
-            }),
-            onEachFeature: (f, l) => l.bindPopup(`<b>${f.properties.N02_003}</b><br>${f.properties.N02_004}`)
-        });
+/* 入力エリア */
+.dice-input-wrapper { padding: 20px; background: #000; border-top: 1px solid #333; }
+#dice-command { width: 100%; height: 60px; background: #151515; border: 1px solid #444; color: #fff; border-radius: 6px; padding: 10px; box-sizing: border-box; resize: none; font-size: 14px; outline: none; }
+#dice-command:focus { border-color: #3399ff; }
 
-        // 駅描画 (白点)
-        stationLayer = L.geoJson(data, {
-            filter: f => f.properties.N02_005,
-            pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-                radius: 3, color: "#fff", weight: 1, opacity: 1, fillOpacity: 0.8
-            }),
-            onEachFeature: (f, l) => l.bindPopup(`駅名: ${f.properties.N02_005}`)
-        });
+/* アルバム */
+#drop-zone { border: 2px dashed #3399ff; padding: 40px 10px; text-align: center; color: #3399ff; border-radius: 10px; margin-bottom: 20px; }
+#album-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.album-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; border: 1px solid #444; }
 
-        document.getElementById('route-res').innerText = "鉄道ネットワーク同期完了";
-    } catch (e) {
-        document.getElementById('route-res').innerText = "データ読み込みエラー";
-    }
-}
-
-// 4. タブ切り替えロジック
-window.switchTab = function(id) {
-    document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(`tab-${id}`).classList.add('active');
-    document.getElementById(`tab-btn-${id}`).classList.add('active');
-
-    if (!map) return;
-    if (id === 'transit') {
-        map.removeLayer(tiles.light); tiles.dark.addTo(map);
-        if (railLayer) railLayer.addTo(map);
-        if (stationLayer) stationLayer.addTo(map);
-    } else {
-        map.removeLayer(tiles.dark); tiles.light.addTo(map);
-        if (railLayer) map.removeLayer(railLayer);
-        if (stationLayer) map.removeLayer(stationLayer);
-    }
-};
-
-// 5. 高機能ダイス（計算・choice対応）
-let enterCount = 0;
-window.rollDice = function() {
-    const name = document.getElementById('user-name').value || "noname";
-    const cmdInput = document.getElementById('dice-command');
-    const cmd = cmdInput.value.trim();
-    if (!cmd) return;
-
-    let finalMsg = cmd;
-    // ダイス正規表現 (例: 1d100+10, 3d6-2)
-    const dm = cmd.match(/^(\d+)d(\d+)([\+\-]\d+)?$/i);
-    // 選択正規表現 (例: choice[A,B])
-    const cm = cmd.match(/choice\[(.*?)\]/);
-
-    if (dm) {
-        let n = parseInt(dm[1]), side = parseInt(dm[2]), mod = dm[3] ? parseInt(dm[3]) : 0;
-        let rolls = [];
-        for(let i=0; i<n; i++) rolls.push(Math.floor(Math.random()*side)+1);
-        let sum = rolls.reduce((a, b) => a + b, 0);
-        finalMsg = `${cmd} (${rolls.join(',')})${mod!==0?(mod>0?'+'+mod:mod):''} ➔ <b>${sum + mod}</b>`;
-    } else if (cm) {
-        const list = cm[1].split(',');
-        const picked = list[Math.floor(Math.random()*list.length)].trim();
-        finalMsg = `${cmd} ➔ <b>${picked}</b>`;
-    }
-
-    pushLog(name, finalMsg);
-    cmdInput.value = "";
-};
-
-function pushLog(name, msg) {
-    const log = document.getElementById('chat-log');
-    const timeId = Date.now();
-    const html = `
-        <div class="log-item" id="log-${timeId}">
-            <span class="delete-btn" onclick="deleteLog(${timeId})">削除</span>
-            <div style="font-size:10px; color:#3399ff; margin-bottom:2px;">${name}</div>
-            <div style="font-size:14px; color:#eee;">${msg}</div>
-        </div>`;
-    log.insertAdjacentHTML('beforeend', html);
-    saveState();
-    log.scrollTop = log.scrollHeight;
-}
-
-window.deleteLog = (id) => {
-    const target = document.getElementById(`log-${id}`);
-    if (target) { target.remove(); saveState(); }
-};
-
-// 6. アルバム・データ管理
-const dropZone = document.getElementById('drop-zone');
-if(dropZone) {
-    dropZone.ondrop = e => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        if(!lastPos) return alert("先に地図をクリックして地点を決めてください");
-        
-        Array.from(e.dataTransfer.files).forEach(file => {
-            if(!file.type.startsWith('image/')) return;
-            const reader = new FileReader();
-            reader.onload = ev => {
-                const data = JSON.parse(localStorage.getItem('v7_album') || "[]");
-                data.push({ lat: lastPos.lat, lng: lastPos.lng, src: ev.target.result });
-                localStorage.setItem('v7_album', JSON.stringify(data));
-                renderAlbum();
-            };
-            reader.readAsDataURL(file);
-        });
-    };
-    dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add('dragover'); };
-    dropZone.ondragleave = () => dropZone.classList.remove('dragover');
-}
-
-function renderAlbum() {
-    const data = JSON.parse(localStorage.getItem('v7_album') || "[]");
-    const grid = document.getElementById('album-grid');
-    if(!grid) return;
-    grid.innerHTML = "";
-    data.forEach(item => {
-        L.marker([item.lat, item.lng]).addTo(map);
-        const img = document.createElement('img');
-        img.src = item.src;
-        img.className = 'album-img';
-        grid.appendChild(img);
-    });
-}
-
-// 7. ユーティリティ
-window.togglePanel = () => document.getElementById('side-panel').classList.toggle('closed');
-window.clearData = () => { if(confirm('全ログとアルバムを消去しますか？')) { localStorage.clear(); location.reload(); } };
-function saveState() { localStorage.setItem('v7_log', document.getElementById('chat-log').innerHTML); }
-function restoreLogs() { document.getElementById('chat-log').innerHTML = localStorage.getItem('v7_log') || ""; }
-
-// Enter×2 送信ロジック
-document.getElementById('dice-command').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        enterCount++;
-        if (enterCount >= 2) { rollDice(); enterCount = 0; }
-        setTimeout(() => enterCount = 0, 500);
-    }
-});
-
-window.onload = initSystem;
+/* パネルトグルボタン */
+#toggle-panel { position: fixed; right: 350px; top: 15px; z-index: 1001; background: #000; color: #fff; border: 1px solid #333; padding: 8px 12px; cursor: pointer; border-radius: 4px 0 0 4px; transition: 0.4s; }
