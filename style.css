@@ -1,53 +1,44 @@
-body { margin: 0; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #eee; }
-#map { position: absolute; width: 100%; height: 100vh; z-index: 1; transition: background 0.5s; }
+/* ゴシック体統一 */
+* { font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; box-sizing: border-box; }
 
-/* パネルレイアウト */
+body { margin: 0; overflow: hidden; background: #000; color: #eee; }
+#map { position: absolute; width: 100%; height: 100vh; z-index: 1; }
+
+/* 路線をカラー一本線に見せるためのフィルタ処理 */
+.custom-rail-layer {
+    filter: saturate(2) contrast(1.2) brightness(1.1);
+}
+
+/* サイドパネルのレイアウト修正（ズレ防止） */
 #side-panel {
     position: absolute; right: 0; top: 0; width: 350px; height: 100vh;
-    background: rgba(18, 18, 18, 0.98); border-left: 1px solid #333;
-    display: flex; flex-direction: column; z-index: 10; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(10, 10, 10, 0.98); border-left: 1px solid #333;
+    display: flex; flex-direction: column; z-index: 10; transition: 0.3s ease;
 }
 #side-panel.closed { transform: translateX(100%); }
 
-#toggle-panel {
-    position: absolute; right: 360px; top: 20px; z-index: 11;
-    background: #111; color: #fff; border: 1px solid #444; padding: 10px; cursor: pointer; border-radius: 4px;
-}
+.panel-tabs { display: flex; height: 55px; background: #000; border-bottom: 1px solid #222; flex-shrink: 0; }
+.tab-btn { flex: 1; border: none; background: none; color: #555; cursor: pointer; font-size: 0.9em; font-weight: bold; }
+.tab-btn.active { color: #00d1ff; border-bottom: 3px solid #00d1ff; }
 
-/* タブ位置の修正：上部に固定 */
-.panel-tabs { display: flex; background: #000; border-bottom: 1px solid #222; height: 50px; flex-shrink: 0; }
-.tab-btn { flex: 1; border: none; background: none; color: #555; cursor: pointer; font-size: 0.85em; font-weight: bold; }
-.tab-btn.active { color: #00d1ff; border-bottom: 2px solid #00d1ff; background: #111; }
-
-.panel-main { flex: 1; overflow-y: auto; padding: 15px; scrollbar-width: thin; }
+.panel-main { flex: 1; overflow-y: auto; padding: 15px; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* 路線図カード */
-.transit-card { background: #111; border: 1px solid #222; border-radius: 6px; overflow: hidden; }
-.transit-card header { background: #222; padding: 8px 12px; font-size: 0.7em; color: #777; letter-spacing: 1px; }
-.info-group { padding: 12px; border-bottom: 1px solid #1a1a1a; }
-.info-group label { display: block; font-size: 0.6em; color: #444; margin-bottom: 5px; }
-.st-input { background: #000; border: 1px solid #333; color: #fff; width: 92%; padding: 8px; font-size: 0.9em; outline: none; }
-.search-btn { width: 100%; padding: 12px; background: #222; border: none; color: #00d1ff; cursor: pointer; font-weight: bold; transition: 0.2s; }
-.search-btn:hover { background: #2a2a2a; }
-.data-value { padding: 15px; font-size: 0.8em; }
-
 /* ダイスログ */
-.log-item { background: #1a1a1a; padding: 12px; border-radius: 4px; border-left: 3px solid #00d1ff; margin-bottom: 10px; }
-.log-meta { font-size: 0.75em; color: #00d1ff; margin-bottom: 4px; }
-.log-msg { font-size: 0.9em; line-height: 1.6; }
+.log-item { background: #181818; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #00d1ff; }
+.log-meta { font-size: 0.75em; color: #00d1ff; margin-bottom: 5px; }
 
-/* アルバム */
-#drop-zone { border: 2px dashed #222; padding: 30px; text-align: center; color: #444; font-size: 0.8em; border-radius: 10px; margin-bottom: 15px; }
-#album-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.album-img { width: 100%; height: 90px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid transparent; }
-.album-img:hover { border-color: #00d1ff; }
-
-/* 下部入力エリア */
-.dice-input-wrapper { background: #0a0a0a; padding: 15px; border-top: 1px solid #222; flex-shrink: 0; }
-#user-name { background: transparent; border: none; color: #666; border-bottom: 1px solid #222; width: 80px; margin-bottom: 10px; outline: none; }
+/* 下部固定入力エリア */
+.dice-input-wrapper { background: #050505; padding: 20px; border-top: 1px solid #222; flex-shrink: 0; }
+#user-name { background: transparent; border: none; color: #888; border-bottom: 1px solid #333; width: 80px; margin-bottom: 12px; font-size: 0.8em; outline: none; }
 .input-main { display: flex; gap: 10px; }
-#dice-command { flex: 1; height: 50px; background: #111; border: 1px solid #222; color: #fff; padding: 10px; resize: none; outline: none; }
-#send-btn { background: #0078ff; color: #fff; border: none; padding: 0 18px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-.clear-btn { margin-top: 20px; width: 100%; background: none; border: 1px solid #311; color: #522; padding: 5px; cursor: pointer; font-size: 0.7em; }
+#dice-command { flex: 1; height: 50px; background: #111; border: 1px solid #333; color: #fff; padding: 10px; resize: none; border-radius: 4px; outline: none; }
+#send-btn { background: #007aff; color: #fff; border: none; padding: 0 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+/* ルート検索カード (前々回UI保持) */
+.transit-card { background: #111; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
+.transit-card header { background: #222; padding: 8px 12px; font-size: 0.7em; color: #666; font-weight: bold; }
+.info-group { padding: 15px; border-bottom: 1px solid #1a1a1a; }
+.st-input { background: #000; border: 1px solid #333; color: #fff; width: 100%; padding: 10px; margin-top: 5px; border-radius: 4px; }
+.search-btn { width: 100%; padding: 15px; background: #222; border: none; color: #00d1ff; cursor: pointer; font-weight: bold; }
