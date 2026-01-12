@@ -3,6 +3,7 @@ index.html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    <meta name="robots" content="noindex, nofollow">    
     <meta charset="UTF-8">
     <title>マイ旅行マップ</title>
     <link rel="stylesheet" href="style.css">
@@ -30,4 +31,5 @@ index.html
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>
