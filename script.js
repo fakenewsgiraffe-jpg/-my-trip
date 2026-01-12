@@ -1,30 +1,32 @@
-// 1. 地図の初期設定（東京を中心に表示）
+// 地図の初期設定
 const map = L.map('map').setView([35.6895, 139.6917], 5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// 2. 旅行データのサンプル
-const tripData = [
-    { name: "東京タワー", coords: [35.6586, 139.7454], photos: ["📸 東京タワーの夜景", "📸 芝公園からの眺め"] },
-    { name: "大阪城", coords: [34.6873, 135.5262], photos: ["🏯 満開の桜と天守閣"] }
-];
-
-// 3. 地図にピン（マーカー）を立てる
-tripData.forEach(item => {
-    const marker = L.marker(item.coords).addTo(map);
-    marker.on('click', () => {
-        document.getElementById('location-name').innerText = item.name;
-        document.getElementById('photo-list').innerHTML = item.photos.join('<br>');
-        document.getElementById('album-modal').classList.remove('hidden');
+// Googleマイマップ（KMLファイル）を読み込む
+fetch('spots.kml')
+    .then(res => res.text())
+    .then(kmltext => {
+        // KMLデータを解析する
+        const parser = new DOMParser();
+        const kml = parser.parseFromString(kmltext, 'text/xml');
+        const track = new L.KML(kml);
+        
+        // 地図にピンを表示
+        map.addLayer(track);
+        
+        // ピンが全部収まるように地図の表示範囲を自動調整
+        const bounds = track.getBounds();
+        map.fitBounds(bounds);
     });
-});
 
-// 4. ダイスロール機能
+// ダイス機能
 function rollDice() {
     const result = Math.floor(Math.random() * 6) + 1;
-    document.getElementById('dice-result').innerText = result + " が出ました！";
+    document.getElementById('dice-result').innerText = result + " 進む！";
 }
 
 function closeAlbum() {
     document.getElementById('album-modal').classList.add('hidden');
 }
+
 
