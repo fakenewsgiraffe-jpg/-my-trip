@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traveler's Tool Pro v1.3</title>
+    <title>Traveler's Tool Pro v1.5</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
@@ -15,7 +15,7 @@
     <aside id="side-panel">
         <nav class="panel-tabs">
             <button id="tab-btn-main" class="tab-btn active" onclick="switchTab('main')">ダイスログ</button>
-            <button id="tab-btn-transit" class="tab-btn" onclick="switchTab('transit')">路線</button>
+            <button id="tab-btn-transit" class="tab-btn" onclick="switchTab('transit')">路線図</button>
             <button id="tab-btn-album" class="tab-btn" onclick="switchTab('album')">情報</button>
         </nav>
 
@@ -44,6 +44,7 @@
                 <div id="pos-display">地図をクリックして地点を選択</div>
                 <div id="drop-zone">ここに写真をドロップして登録</div>
                 <div id="album-grid"></div>
+                <button class="clear-btn" onclick="clearAlbum()">全データ削除</button>
             </section>
         </div>
 
@@ -52,7 +53,7 @@
                 <input type="text" id="user-name" value="noname" placeholder="名前">
             </div>
             <div class="input-main">
-                <textarea id="dice-command" placeholder="メッセージを入力（Enter2回）"></textarea>
+                <textarea id="dice-command" placeholder="1d100 / choice[A,B] (Enter2回)"></textarea>
                 <button id="send-btn" onclick="rollDice()">送信</button>
             </div>
         </div>
