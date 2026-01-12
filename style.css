@@ -49,20 +49,54 @@
     line-height: 1.5;
 }
 
-.dice-input-wrapper button {
-    align-self: flex-end; /* ボタンを右寄せ */
-    padding: 8px 20px;
-    background: #0078ff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.dice-input-wrapper {
+    background: #222; /*少し明るい黒 */
+    padding: 10px;
+    border-top: 1px solid #444;
 }
 
-// Shift+Enterは改行、Enterのみは送信にする設定
-document.getElementById('dice-command').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        rollDice();
-    }
-});
+.dice-toolbar {
+    display: flex;
+    gap: 15px;
+    color: #888;
+    font-size: 1.2em;
+    padding-bottom: 5px;
+    cursor: default;
+}
+
+.input-area-main {
+    display: flex;
+    align-items: flex-end; /* ボタンを下揃えに */
+    gap: 10px;
+}
+
+#dice-command {
+    flex: 1;
+    background: #111;
+    border: none;
+    color: #ccc;
+    padding: 10px;
+    border-radius: 4px;
+    resize: none;
+    font-size: 0.9em;
+    min-height: 60px; /* 3行分くらいの高さ */
+}
+
+#send-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 10px;
+    transition: 0.2s;
+}
+
+#send-btn:hover { color: #0078ff; }
+
+/* ログの表示順を調整 */
+#chat-log {
+    display: flex;
+    flex-direction: column; /* 下に溜まっていく形式 */
+    padding: 15px;
+}
