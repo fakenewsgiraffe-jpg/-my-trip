@@ -1,23 +1,46 @@
-/* パネル内のレイアウト調整 */
-#side-panel { position: relative; height: 100vh; }
-
-#chat-log, #tab-transit { 
-    flex: 1; 
-    overflow-y: auto; 
-    padding-bottom: 80px; /* 入力欄に被らないように */
+/* サイドパネルのレイアウトをココフォリア風に */
+#side-panel {
+    display: flex;
+    flex-direction: column;
+    background: #1e1e1e;
+    height: 100vh;
 }
 
-/* 入力欄を右下に固定 */
-.dice-input-wrapper { 
-    position: absolute; bottom: 0; left: 0; right: 0;
-    padding: 20px; background: #121212;
-    border-top: 1px solid #2a2a2a;
+/* ログ表示エリア：新しい順に上に表示 */
+#chat-log {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse; /* 新しいログを上に */
+    padding: 10px;
+    gap: 8px;
 }
 
-/* 地図切り替えボタン（Leaflet標準）のカスタマイズ */
-.leaflet-control-layers {
-    background: rgba(30, 30, 30, 0.8) !important;
-    color: #eee !important;
-    border: 1px solid #444 !important;
-    border-radius: 4px !important;
+/* 個別のログアイテム */
+.log-item {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 4px solid #0078ff;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 入力欄：最下部に固定 */
+.dice-input-wrapper {
+    background: #111;
+    padding: 15px;
+    border-top: 1px solid #333;
+    display: flex;
+    gap: 10px;
+}
+
+#dice-command {
+    flex: 1;
+    background: #222;
+    border: 1px solid #444;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
 }
