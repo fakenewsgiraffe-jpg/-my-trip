@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traveler's Tool - Pro v1.1</title>
+    <title>Traveler's Tool - Pro v1.2</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
@@ -26,37 +26,38 @@
 
             <section id="tab-transit" class="tab-content">
                 <div class="transit-card">
-                    <header>ROUTE SEARCH</header>
+                    <header>ROUTE INFO</header>
                     <div class="info-group">
-                        <label>FROM</label>
-                        <input type="text" id="station-from" placeholder="出発駅" class="station-input">
+                        <label>STATUS</label>
+                        <div id="train-type" class="data-value">NORMAL</div>
                     </div>
                     <div class="info-group">
-                        <label>TO</label>
-                        <input type="text" id="station-to" placeholder="到着駅" class="station-input">
+                        <label>TRANSFER / FROM-TO</label>
+                        <div class="input-row">
+                            <input type="text" id="station-from" placeholder="出発" class="st-input">
+                            <span>→</span>
+                            <input type="text" id="station-to" placeholder="到着" class="st-input">
+                        </div>
+                        <button class="search-btn" onclick="searchRoute()">経路検索</button>
                     </div>
-                    <button class="search-btn" onclick="searchRoute()">経路検索表示</button>
-                    <div id="route-result" class="data-value">-</div>
+                    <div id="transfer-info" class="data-value">-</div>
                 </div>
             </section>
 
             <section id="tab-album" class="tab-content">
-                <div id="selected-pos-info">地図をクリックして地点を選択</div>
-                <div id="drop-zone">ここに写真をドロップして登録</div>
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                    <span style="font-size: 0.7em; color: #666;">ALBUM LOG</span>
-                    <button onclick="clearAlbum()" style="background:none; border:none; color:#ff4d4d; cursor:pointer; font-size:0.7em;">全削除</button>
-                </div>
+                <div id="pos-display">地図をクリックして地点を選択</div>
+                <div id="drop-zone">写真をドラッグ＆ドロップ</div>
                 <div id="album-grid"></div>
+                <button class="clear-btn" onclick="clearAlbum()">アルバムをリセット</button>
             </section>
         </div>
 
         <div class="dice-input-wrapper">
             <div class="name-area">
-                <input type="text" id="user-name" value="DL" placeholder="名前">
+                <input type="text" id="user-name" value="noname" placeholder="名前">
             </div>
             <div class="input-main">
-                <textarea id="dice-command" placeholder="1d100 / choice[右,左] (Enter2回)"></textarea>
+                <textarea id="dice-command" placeholder="メッセージを入力（Enter2回で送信）"></textarea>
                 <button id="send-btn" onclick="rollDice()">送信</button>
             </div>
         </div>
