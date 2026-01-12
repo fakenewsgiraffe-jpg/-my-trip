@@ -33,14 +33,29 @@
     padding: 15px;
     border-top: 1px solid #333;
     display: flex;
+    flex-direction: column; /* ボタンを下に配置するか、横に並べるか選べます */
     gap: 10px;
 }
 
 #dice-command {
-    flex: 1;
+    width: 100%;
     background: #222;
     border: 1px solid #444;
     color: white;
-    padding: 8px;
+    padding: 10px;
     border-radius: 4px;
+    resize: none; /* ユーザーが大きさを変えられないように固定 */
+    font-family: inherit;
+    line-height: 1.5;
 }
+
+.dice-input-wrapper button {
+    align-self: flex-end; /* ボタンを右寄せ */
+    padding: 8px 20px;
+    background: #0078ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
