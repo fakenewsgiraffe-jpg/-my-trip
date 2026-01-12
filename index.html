@@ -3,46 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="robots" content="noindex, nofollow">
-    <title>ダイスの旅記録</title>
+    <title>旅のココフォリア風マップ</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
-<body>
+<body class="ccfolia-theme">
 
-    <h1>ダイスの旅</h1>
-    
-    <div id="main-container">
-        <div id="left-panel">
-            <div id="dice-area">
-                <input type="text" id="dice-input" placeholder="例: 2d10, choice{表,裏}">
-                <button onclick="rollDice()">ダイスを振る</button>
-                <div id="dice-result"></div>
-                
-                <div id="dice-log-container">
-                    <strong>ダイスログ</strong>
-                    <div id="dice-log"></div>
+    <div id="app-wrapper">
+        <div id="map-container">
+            <div id="map"></div>
+            <div id="floating-dice">
+                <input type="text" id="dice-input" placeholder="2d6, choice{駅弁,麺}">
+                <button onclick="rollDice()">送信</button>
+            </div>
+        </div>
+
+        <div id="side-panel">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('log')">メイン</button>
+                <button class="tab-btn" onclick="switchTab('info')">情報</button>
+            </div>
+
+            <div id="tab-log" class="tab-content active">
+                <div id="dice-result-display"></div>
+                <div id="dice-log"></div>
+            </div>
+
+            <div id="tab-info" class="tab-content">
+                <h3>🚉 乗り換え・運行</h3>
+                <div class="info-card">
+                    <p class="label">種別</p>
+                    <p id="train-type" class="value">-</p>
+                    <p class="label">乗換案内</p>
+                    <p id="transfer-info" class="value">-</p>
+                    <div id="station-tips" class="tips-box">ダイスを振ってください</div>
                 </div>
             </div>
-
-            <div id="map"></div>
-        </div>
-
-        <div id="right-panel">
-            <h3>次の移動情報</h3>
-            <div class="info-box">
-                <p><strong>路線:</strong> <span id="train-type">-</span></p>
-                <p><strong>乗換:</strong> <span id="transfer-info">-</span></p>
-                <hr>
-                <p id="station-tips">ダイスを振って進みましょう。</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="album-modal" class="hidden">
-        <div class="modal-content">
-            <span class="close" onclick="closeAlbum()">&times;</span>
-            <h2 id="location-name">場所の名前</h2>
-            <div id="photo-list"></div>
         </div>
     </div>
 
