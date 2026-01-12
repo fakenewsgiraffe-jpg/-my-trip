@@ -62,6 +62,21 @@ function addLog(msg) {
     const item = document.createElement('div');
     item.className = 'log-item';
     
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`; // 日付形式に
+    
+    item.innerHTML = `
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:5px;">
+            <span style="font-weight:bold; color:#aaa;">noname</span>
+            <span style="font-size:0.7em; color:#555;">- ${timeStr}</span>
+        </div>
+        <div class="log-msg">${msg}</div>
+    `;
+    
+    log.appendChild(item); // 下に追加
+    log.scrollTop = log.scrollHeight; // 自動スクロール
+}
+    
     // 時刻とメッセージを構成
     const now = new Date();
     const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -99,5 +114,6 @@ function updateTransit(val) {
     document.getElementById('transfer-info').innerText = val > 15 ? "主要ターミナルで乗り換え推奨" : "直通運転あり";
     document.getElementById('station-tips').innerText = `${val}駅先周辺の情報をチェックしています...`;
 }
+
 
 
