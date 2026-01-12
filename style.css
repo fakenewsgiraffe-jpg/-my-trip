@@ -1,44 +1,52 @@
-/* ゴシック体統一 */
+/* 全体ゴシック体 */
 * { font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; box-sizing: border-box; }
 
-body { margin: 0; overflow: hidden; background: #000; color: #eee; }
-#map { position: absolute; width: 100%; height: 100vh; z-index: 1; }
+body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+#map { position: absolute; width: 100%; height: 100%; z-index: 1; background: #111; }
 
-/* 路線をカラー一本線に見せるためのフィルタ処理 */
-.custom-rail-layer {
-    filter: saturate(2) contrast(1.2) brightness(1.1);
+/* 路線一本線化：タイルから白ふちや注釈を飛ばし、色だけを抽出する特殊フィルタ */
+.rail-single-line {
+    filter: contrast(150%) saturate(200%) brightness(1.2) drop-shadow(0 0 1px #000);
+    mix-blend-mode: screen; /* 黒背景で色を際立たせる */
+    opacity: 0.9;
 }
 
-/* サイドパネルのレイアウト修正（ズレ防止） */
+/* パネル */
 #side-panel {
     position: absolute; right: 0; top: 0; width: 350px; height: 100vh;
     background: rgba(10, 10, 10, 0.98); border-left: 1px solid #333;
-    display: flex; flex-direction: column; z-index: 10; transition: 0.3s ease;
+    display: flex; flex-direction: column; z-index: 10; transition: 0.3s;
 }
 #side-panel.closed { transform: translateX(100%); }
 
-.panel-tabs { display: flex; height: 55px; background: #000; border-bottom: 1px solid #222; flex-shrink: 0; }
-.tab-btn { flex: 1; border: none; background: none; color: #555; cursor: pointer; font-size: 0.9em; font-weight: bold; }
-.tab-btn.active { color: #00d1ff; border-bottom: 3px solid #00d1ff; }
+.panel-tabs { display: flex; height: 50px; background: #000; flex-shrink: 0; }
+.tab-btn { flex: 1; border: none; background: none; color: #555; cursor: pointer; font-weight: bold; }
+.tab-btn.active { color: #00d1ff; border-bottom: 2px solid #00d1ff; }
 
 .panel-main { flex: 1; overflow-y: auto; padding: 15px; }
 .tab-content { display: none; }
-.tab-content.active { display: block; }
 
 /* ダイスログ */
-.log-item { background: #181818; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #00d1ff; }
-.log-meta { font-size: 0.75em; color: #00d1ff; margin-bottom: 5px; }
+.log-item { background: #1a1a1a; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid #00d1ff; }
+.log-meta { font-size: 0.7em; color: #00d1ff; margin-bottom: 4px; }
 
-/* 下部固定入力エリア */
-.dice-input-wrapper { background: #050505; padding: 20px; border-top: 1px solid #222; flex-shrink: 0; }
-#user-name { background: transparent; border: none; color: #888; border-bottom: 1px solid #333; width: 80px; margin-bottom: 12px; font-size: 0.8em; outline: none; }
+/* 入力欄 */
+.dice-input-wrapper { padding: 20px; background: #050505; border-top: 1px solid #222; }
+#user-name { background: transparent; border: none; color: #888; border-bottom: 1px solid #222; margin-bottom: 10px; width: 80px; }
 .input-main { display: flex; gap: 10px; }
-#dice-command { flex: 1; height: 50px; background: #111; border: 1px solid #333; color: #fff; padding: 10px; resize: none; border-radius: 4px; outline: none; }
-#send-btn { background: #007aff; color: #fff; border: none; padding: 0 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+#dice-command { flex: 1; height: 50px; background: #111; color: #fff; border: 1px solid #333; padding: 10px; border-radius: 4px; resize: none; }
+#send-btn { background: #007aff; color: #fff; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; }
 
-/* ルート検索カード (前々回UI保持) */
+/* 路線検索 */
 .transit-card { background: #111; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
-.transit-card header { background: #222; padding: 8px 12px; font-size: 0.7em; color: #666; font-weight: bold; }
+.transit-card header { background: #222; padding: 8px; font-size: 0.7em; color: #555; }
 .info-group { padding: 15px; border-bottom: 1px solid #1a1a1a; }
-.st-input { background: #000; border: 1px solid #333; color: #fff; width: 100%; padding: 10px; margin-top: 5px; border-radius: 4px; }
-.search-btn { width: 100%; padding: 15px; background: #222; border: none; color: #00d1ff; cursor: pointer; font-weight: bold; }
+.st-input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 4px; }
+.search-btn { width: 100%; padding: 15px; background: #222; color: #00d1ff; border: none; cursor: pointer; }
+
+/* アルバム */
+#drop-zone { border: 2px dashed #333; padding: 30px; text-align: center; color: #555; font-size: 0.8em; margin-bottom: 15px; }
+#album-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.album-img { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; cursor: pointer; }
+
+#toggle-panel { position: absolute; right: 360px; top: 15px; z-index: 11; background: #000; color: #fff; border: 1px solid #333; padding: 10px; cursor: pointer; }
