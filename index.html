@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traveler's Tool Final v3</title>
+    <title>Traveler's Tool - Professional Rail Edition</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css">
     <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="map"></div>
@@ -23,6 +23,7 @@
             <section id="tab-main" class="tab-content active">
                 <div id="chat-log"></div>
             </section>
+
             <section id="tab-transit" class="tab-content">
                 <div class="transit-card">
                     <header>ROUTE SEARCH</header>
@@ -31,28 +32,21 @@
                         <label style="margin-top:8px">TO</label><input type="text" id="st-to" class="st-input" placeholder="到着駅">
                     </div>
                     <button class="search-btn" onclick="searchRoute()">経路検索表示</button>
-                    <div id="route-res" class="data-value">-</div>
+                    <div id="route-res" class="data-value">GeoJSONデータを読み込み中...</div>
                 </div>
             </section>
+
             <section id="tab-album" class="tab-content">
                 <div id="pos-display">地図をクリックして地点を選択</div>
                 <div id="drop-zone">写真をドロップ</div>
                 <div id="album-grid"></div>
-                <button class="clear-btn" onclick="clearData()">リセット</button>
+                <button class="clear-btn" onclick="clearData()">全データリセット</button>
             </section>
         </div>
 
         <div class="dice-input-wrapper">
             <input type="text" id="user-name" value="noname">
             <div class="input-main">
-                <textarea id="dice-command" placeholder="メッセージを入力(Enter×2)"></textarea>
+                <textarea id="dice-command" placeholder="メッセージを入力(Enter×2で送信)"></textarea>
                 <button id="send-btn" onclick="rollDice()">送信</button>
             </div>
-        </div>
-    </aside>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
-
