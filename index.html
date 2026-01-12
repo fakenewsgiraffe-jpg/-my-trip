@@ -1,64 +1,30 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Log - Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-</head>
-<body>
+<aside id="side-panel">
+    <nav class="panel-tabs">
+        <button class="tab-btn active" onclick="switchTab('main')">ログ</button>
+        <button class="tab-btn" onclick="switchTab('transit')">移動情報</button>
+    </nav>
 
-    <div id="app-container">
-        <div id="map-viewport">
-            <div id="map"></div>
-            <div id="drop-zone">ここに画像をドロップしてアルバムに追加</div>
+    <section id="tab-main" class="tab-content active">
+        <div id="chat-log"></div>
+    </section>
+
+    <section id="tab-transit" class="tab-content">
+        <div class="transit-card">
+            <header>ROUTE INFO</header>
+            <div class="info-group">
+                <label>STATUS</label>
+                <div id="train-type" class="data-value">-</div>
+            </div>
+            <div class="info-group">
+                <label>TRANSFER</label>
+                <div id="transfer-info" class="data-value">-</div>
+            </div>
+            <div id="station-tips" class="memo-area">ダイスを振ってルートを決定してください。</div>
         </div>
+    </section>
 
-        <aside id="side-panel">
-            <nav class="panel-tabs">
-                <button class="tab-btn active" onclick="switchTab('main')">ログ/ダイス</button>
-                <button class="tab-btn" onclick="switchTab('transit')">移動情報</button>
-            </nav>
-
-            <section id="tab-main" class="tab-content active">
-                <div class="dice-input-wrapper">
-                    <input type="text" id="dice-command" placeholder="2d6, choice{駅弁,麺}">
-                    <button onclick="rollDice()">送信</button>
-                </div>
-                <div id="chat-log">
-                    </div>
-            </section>
-
-            <section id="tab-transit" class="tab-content">
-                <div class="transit-card">
-                    <header>ROUTE INFO</header>
-                    <div class="info-group">
-                        <label>STATUS</label>
-                        <div id="train-type" class="data-value">-</div>
-                    </div>
-                    <div class="info-group">
-                        <label>TRANSFER</label>
-                        <div id="transfer-info" class="data-value">-</div>
-                    </div>
-                    <div id="station-tips" class="memo-area">ダイスを振ってルートを決定してください。</div>
-                </div>
-            </section>
-        </aside>
+    <div class="dice-input-wrapper">
+        <input type="text" id="dice-command" placeholder="1d10+13, choice{八王子,大宮}">
+        <button onclick="rollDice()">送信</button>
     </div>
-
-    <div id="album-modal" class="hidden" onclick="closeAlbum()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <header>
-                <span id="location-name">LOCATION</span>
-                <button class="close-btn" onclick="closeAlbum()">×</button>
-            </header>
-            <div id="photo-list"></div>
-        </div>
-    </div>
-
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-kml/L.KML.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+</aside>
