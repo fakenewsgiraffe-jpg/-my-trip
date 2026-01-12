@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traveler's Tool - Stable Edition</title>
+    <title>Traveler's Tool - Professional Edition</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
     <style>
-        /* 地図が表示されない問題を回避するための最低限のスタイル */
         #map { width: 100%; height: 100vh; background: #000; }
-        /* タブの切り替えを確実に見せるための設定 */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
@@ -38,23 +36,23 @@
                         <label style="margin-top:8px">TO</label><input type="text" id="st-to" class="st-input" placeholder="到着駅">
                     </div>
                     <button class="search-btn" onclick="searchRoute()">経路検索表示</button>
-                    <div id="route-res" class="data-value">データ読み込み中...</div>
+                    <div id="route-res" class="data-value">路線データを読み込み中...</div>
                 </div>
             </section>
 
             <section id="tab-album" class="tab-content">
-                <div id="pos-display">地図をクリックして地点を選択</div>
-                <div id="drop-zone">写真をドロップ</div>
-                <div id="album-grid"></div>
-                <button class="clear-btn" onclick="clearData()">リセット</button>
+                <div id="pos-display" style="padding:10px; background:#222; margin-bottom:10px; border-radius:5px;">地図をクリックして地点を選択</div>
+                <div id="drop-zone" style="border:2px dashed #444; padding:30px; text-align:center; margin-bottom:15px; border-radius:10px;">ここに写真をドロップ</div>
+                <div id="album-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;"></div>
+                <button class="clear-btn" onclick="clearData()" style="margin-top:20px; width:100%; padding:10px; background:#441111;">全データリセット</button>
             </section>
         </div>
 
         <div class="dice-input-wrapper">
-            <input type="text" id="user-name" value="noname">
-            <div class="input-main">
-                <textarea id="dice-command" placeholder="Enter×2で送信"></textarea>
-                <button id="send-btn" onclick="rollDice()">送信</button>
+            <input type="text" id="user-name" value="noname" style="width:100%; background:#111; color:#eee; border:none; padding:5px;">
+            <div class="input-main" style="display:flex; gap:5px; margin-top:5px;">
+                <textarea id="dice-command" placeholder="Enter×2で送信" style="flex:1; background:#222; color:#fff; border:none; border-radius:4px; padding:5px; height:40px;"></textarea>
+                <button id="send-btn" onclick="rollDice()" style="background:#007bff; color:white; border:none; border-radius:4px; padding:0 15px;">送信</button>
             </div>
         </div>
     </aside>
