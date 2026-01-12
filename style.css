@@ -1,102 +1,48 @@
-/* サイドパネルのレイアウトをココフォリア風に */
+body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+
+/* 地図の配置 */
+#map { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 1; }
+
+/* サイドパネル */
 #side-panel {
-    display: flex;
-    flex-direction: column;
-    background: #1e1e1e;
-    height: 100vh;
+    position: absolute; right: 0; top: 0; width: 350px; height: 100vh;
+    background: rgba(20, 20, 20, 0.9); border-left: 1px solid #444;
+    display: flex; flex-direction: column; z-index: 10;
+    transition: transform 0.3s ease;
+}
+#side-panel.closed { transform: translateX(100%); }
+
+/* 折り畳みボタン */
+#toggle-panel {
+    position: absolute; right: 360px; top: 15px; z-index: 11;
+    background: #222; color: #fff; border: 1px solid #444; padding: 8px; cursor: pointer;
 }
 
-/* ログ表示エリア：新しい順に上に表示 */
-#chat-log {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column-reverse; /* 新しいログを上に */
-    padding: 10px;
-    gap: 8px;
-}
+/* ユーザー名入力 */
+.user-config { padding: 10px; background: #111; display: flex; align-items: center; border-bottom: 1px solid #333; }
+#user-name { background: transparent; border: none; color: #fff; font-size: 1em; width: 100%; outline: none; }
 
-/* 個別のログアイテム */
-.log-item {
-    background: #2a2a2a;
-    padding: 10px;
-    border-radius: 4px;
-    border-left: 4px solid #0078ff;
-    animation: fadeIn 0.3s ease;
-}
+/* タブボタン */
+.panel-tabs { display: flex; background: #1a1a1a; }
+.tab-btn { flex: 1; padding: 10px; border: none; background: none; color: #888; cursor: pointer; border-bottom: 2px solid transparent; }
+.tab-btn.active { color: #fff; border-bottom: 2px solid #0078ff; background: #222; }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+/* コンテンツ表示切り替え */
+.tab-content { display: none; flex: 1; overflow-y: auto; padding: 15px; }
+.tab-content.active { display: block; }
 
-/* 入力欄：最下部に固定 */
-.dice-input-wrapper {
-    background: #111;
-    padding: 15px;
-    border-top: 1px solid #333;
-    display: flex;
-    flex-direction: column; /* ボタンを下に配置するか、横に並べるか選べます */
-    gap: 10px;
-}
+/* ログ・チャット */
+#chat-log { display: flex; flex-direction: column; gap: 10px; }
+.log-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px; border-left: 3px solid #0078ff; }
+.log-name { font-size: 0.8em; color: #888; margin-bottom: 4px; }
 
-#dice-command {
-    width: 100%;
-    background: #222;
-    border: 1px solid #444;
-    color: white;
-    padding: 10px;
-    border-radius: 4px;
-    resize: none; /* ユーザーが大きさを変えられないように固定 */
-    font-family: inherit;
-    line-height: 1.5;
-}
+/* アルバム */
+#drop-zone { border: 2px dashed #444; padding: 20px; text-align: center; color: #666; margin-bottom: 10px; }
+#album-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.album-img { width: 100%; border-radius: 4px; }
 
-.dice-input-wrapper {
-    background: #222; /*少し明るい黒 */
-    padding: 10px;
-    border-top: 1px solid #444;
-}
-
-.dice-toolbar {
-    display: flex;
-    gap: 15px;
-    color: #888;
-    font-size: 1.2em;
-    padding-bottom: 5px;
-    cursor: default;
-}
-
-.input-area-main {
-    display: flex;
-    align-items: flex-end; /* ボタンを下揃えに */
-    gap: 10px;
-}
-
-#dice-command {
-    flex: 1;
-    background: #111;
-    border: none;
-    color: #ccc;
-    padding: 10px;
-    border-radius: 4px;
-    resize: none;
-    font-size: 0.9em;
-    min-height: 60px; /* 3行分くらいの高さ */
-}
-
-#send-btn {
-    background: none;
-    border: none;
-    color: #fff;
-    font-weight: bold;
-    cursor: pointer;
-    padding: 10px;
-    transition: 0.2s;
-}
-
-#send-btn:hover { color: #0078ff; }
-
-/* ログの表示順を調整 */
-#chat-log {
-    display: flex;
-    flex-direction: column; /* 下に溜まっていく形式 */
-    padding: 15px;
-}
+/* 入力欄 */
+.dice-input-wrapper { background: #111; padding: 10px; border-top: 1px solid #333; }
+#dice-command { width: 100%; height: 60px; background: #000; border: 1px solid #333; color: #fff; padding: 8px; resize: none; box-sizing: border-box; }
+.input-footer { display: flex; justify-content: flex-end; margin-top: 5px; }
+#send-btn { background: #0078ff; color: #fff; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
