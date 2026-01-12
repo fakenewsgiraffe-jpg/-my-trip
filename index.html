@@ -11,47 +11,46 @@
 <body>
 
     <div id="map"></div>
-
     <button id="toggle-panel" onclick="togglePanel()">≫</button>
 
     <aside id="side-panel">
-        <div class="user-config">
-            <span class="user-icon">👤</span>
-            <input type="text" id="user-name" value="DL" placeholder="名前">
-        </div>
-
         <nav class="panel-tabs">
             <button class="tab-btn active" onclick="switchTab('main')">ダイスログ</button>
             <button class="tab-btn" onclick="switchTab('transit')">路線図</button>
             <button class="tab-btn" onclick="switchTab('album')">情報</button>
         </nav>
 
-        <section id="tab-main" class="tab-content active">
-            <div id="chat-log"></div>
-        </section>
+        <div class="panel-main">
+            <section id="tab-main" class="tab-content active">
+                <div id="chat-log"></div>
+            </section>
 
-        <section id="tab-transit" class="tab-content">
-            <div class="transit-card">
-                <header>ROUTE INFO</header>
-                <div class="info-group">
-                    <label>STATUS</label>
-                    <div id="train-type" class="data-value">-</div>
+            <section id="tab-transit" class="tab-content">
+                <div class="transit-card">
+                    <header>ROUTE INFO</header>
+                    <div class="info-group">
+                        <label>STATUS</label>
+                        <div id="train-type" class="data-value">-</div>
+                    </div>
+                    <div class="info-group">
+                        <label>TRANSFER</label>
+                        <div id="transfer-info" class="data-value">-</div>
+                    </div>
                 </div>
-                <div class="info-group">
-                    <label>TRANSFER</label>
-                    <div id="transfer-info" class="data-value">-</div>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="tab-album" class="tab-content">
-            <div id="drop-zone">写真をドラッグ＆ドロップ</div>
-            <div id="album-grid"></div>
-        </section>
+            <section id="tab-album" class="tab-content">
+                <div id="drop-zone">写真をドラッグ＆ドロップ</div>
+                <div id="album-grid"></div>
+            </section>
+        </div>
 
         <div class="dice-input-wrapper">
-            <textarea id="dice-command" placeholder="メッセージを入力 (1d100 など)"></textarea>
-            <div class="input-footer">
+            <div class="name-area">
+                <input type="text" id="user-name" value="DL" placeholder="名前">
+            </div>
+            <div class="input-main">
+                <textarea id="dice-command" placeholder="メッセージを入力"></textarea>
                 <button id="send-btn" onclick="rollDice()">送信</button>
             </div>
         </div>
@@ -60,6 +59,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
