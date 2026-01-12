@@ -1,89 +1,62 @@
-// 1. 地図の初期設定
-const map = L.map('map').setView([35.6895, 139.6917], 5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+// 地図設定（ダークモード風のタイルを使用）
+const map = L.map('map').setView([35.6895, 139.6917], 10);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-// 2. Googleマイマップ(KML)の読み込み
-fetch('spots.kml')
-    .then(res => res.text())
-    .then(kmltext => {
-        const parser = new DOMParser();
-        const kml = parser.parseFromString(kmltext, 'text/xml');
-        const track = new L.KML(kml);
-        map.addLayer(track);
-        
-        // ピンをクリックした時にアルバム（名前）を出す設定
-        track.on('click', function(e) {
-            const name = e.layer.options.title || "不明な地点";
-            document.getElementById('location-name').innerText = name;
-            document.getElementById('photo-list').innerText = "ここに写真を紐付ける準備ができました。";
-            document.getElementById('album-modal').classList.remove('hidden');
-        });
+// タブ切り替え機能
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById('tab-' + tabName).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
 
-        const bounds = track.getBounds();
-        map.fitBounds(bounds);
-    })
-    .catch(err => console.error("KML読み込みエラー: spots.kmlが見つからないか、形式が違います。"));
-
-// 3. 高機能ダイスロール
+// ダイス機能
 function rollDice() {
     const input = document.getElementById('dice-input').value.trim() || "1d6";
-    const resultArea = document.getElementById('dice-result');
+    const resultDisplay = document.getElementById('dice-result-display');
     const logArea = document.getElementById('dice-log');
     let resultText = "";
-    let totalValue = 0;
+    let total = 0;
 
-    if (input.startsWith("choice{") && input.endsWith("}")) {
-        const choices = input.replace("choice{", "").replace("}", "").split(",");
-        const picked = choices[Math.floor(Math.random() * choices.length)].trim();
-        resultText = `選択結果: ${picked}`;
-    } 
-    else if (input.match(/^\d+d\d+$/)) {
+    // ダイス計算（前回と同じ）
+    if (input.match(/^\d+d\d+$/)) {
         const [num, face] = input.split('d').map(Number);
         let rolls = [];
         for (let i = 0; i < num; i++) {
             let r = Math.floor(Math.random() * face) + 1;
             rolls.push(r);
-            totalValue += r;
+            total += r;
         }
-        resultText = `${input} ➔ 合計: ${totalValue} (${rolls.join(', ')})`;
-    } 
-    else {
-        alert("入力例: 1d100, 2d6, choice{駅弁,カレー}");
-        return;
+        resultText = `${input} ➔ ${total} [${rolls.join(',')}]`;
+    } else if (input.startsWith("choice{")) {
+        const choices = input.replace("choice{","").replace("}","").split(",");
+        resultText = `choice ➔ ${choices[Math.floor(Math.random()*choices.length)]}`;
     }
 
-    resultArea.innerText = resultText;
-
-    // ログ追加
-    const now = new Date();
-    const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    // 表示とログ
+    resultDisplay.innerText = resultText;
     const newLog = document.createElement('div');
-    newLog.innerText = `[${time}] ${resultText}`;
+    newLog.innerText = `noname: ${resultText}`;
     logArea.prepend(newLog);
 
-    // 右側のタブ情報を更新（ダイスの合計値に応じて情報を変える例）
-    updateInfoTab(totalValue);
+    // 情報タブの内容を自動更新
+    updateTrainInfo(total);
 }
 
-// 4. 右側情報の更新
-function updateInfoTab(value) {
-    const type = document.getElementById('train-type');
-    const transfer = document.getElementById('transfer-info');
-    const tips = document.getElementById('station-tips');
-
-    if (value === 0) return; // choiceの場合は更新しない
-
-    if (value % 2 === 0) {
-        type.innerText = "快速 / 特急";
-        transfer.innerText = "次の主要駅で乗り換え可能";
-        tips.innerText = `${value}駅先は大きな街です。お土産をチェック！`;
-    } else {
-        type.innerText = "各駅停車";
-        transfer.innerText = "なし（のんびり旅）";
-        tips.innerText = `${value}駅先は静かな駅です。駅舎の写真を撮りましょう。`;
-    }
+function updateTrainInfo(val) {
+    if (val === 0) return;
+    // ここに画像image_7907f2.jpgのような情報を条件分岐で入れる
+    document.getElementById('train-type').innerText = val % 2 === 0 ? "快速 (東急田園都市線)" : "各駅停車 (小田急線)";
+    document.getElementById('transfer-info').innerText = "町田駅にてJR横浜線へ乗換";
+    document.getElementById('station-tips').innerText = `${val}駅先で美味しい駅弁が買えるようです。`;
 }
 
-function closeAlbum() {
-    document.getElementById('album-modal').classList.add('hidden');
-}
+// KML読み込み（ファイル名は自分のものに合わせてください）
+fetch('spots.kml').then(res => res.text()).then(kmltext => {
+    const parser = new DOMParser();
+    const kml = parser.parseFromString(kmltext, 'text/xml');
+    const track = new L.KML(kml);
+    map.addLayer(track);
+});
+
