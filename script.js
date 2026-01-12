@@ -158,3 +158,4 @@ document.getElementById('dice-command').addEventListener('keydown', e => {
 });
 
 window.onload = init;
+
