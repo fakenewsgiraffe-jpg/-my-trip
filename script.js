@@ -547,6 +547,54 @@ window.clearData = () => {
 
 window.onload = init;
 
+async function loadRailway() {
+  const status = document.getElementById("route-res");
+  try {
+    const res = await fetch("railway.json");
+    if (!res.ok) throw new Error(`railway.json fetch failed: ${res.status}`);
+    const data = await res.json();
+
+    // ⑤：色辞書に無い路線名を一覧で出す（開発中だけON推奨）
+    debugMissingLineNames(data);
+
+    // 既存のrailLayerがあるなら消して作り直す（再読込でも安全）
+    if (railLayer) {
+      try { map.removeLayer(railLayer); } catch (_) {}
+      railLayer = null;
+    }
+
+    // 正規化したキーで色を引けるように、辞書側も正規化してマップ化
+    const normalizedColorMap = new Map(
+      Object.entries(RAIL_COLORS).map(([k, v]) => [normLineName(k), v])
+    );
+
+    railLayer = L.geoJson(data, {
+      style: (f) => {
+        const rawName = getLineNameFromProps(f?.properties);
+        const key = normLineName(rawName);
+
+        // ④：正規化キーで色を引く（無ければグレー）
+        const color = normalizedColorMap.get(key) || "#777";
+
+        return {
+          color,
+          weight: 3,
+          opacity: 0.9,
+        };
+      },
+      onEachFeature: (f, l) => {
+        const rawName = getLineNameFromProps(f?.properties) || "路線";
+        l.bindPopup(`<b>${escapeHtml(rawName)}</b>`);
+      },
+    });
+
+    if (status) status.innerText = "鉄道データ同期完了（色マッチ改善）";
+  } catch (e) {
+    console.warn(e);
+    if (status) status.innerText = "鉄道データ読み込み失敗";
+  }
+}
+
 
 
 
