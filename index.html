@@ -1,55 +1,64 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traveler's Tool - Professional Master</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traveler's Tool - Professional Master</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="map"></div>
-    <button id="toggle-panel" onclick="togglePanel()">≫</button>
+  <div id="map"></div>
+  <button id="toggle-panel" onclick="togglePanel()">≫</button>
 
-    <aside id="side-panel">
-        <nav class="panel-tabs">
-            <button id="tab-btn-main" class="tab-btn active" onclick="switchTab('main')">ダイスログ</button>
-            <button id="tab-btn-transit" class="tab-btn" onclick="switchTab('transit')">路線図</button>
-            <button id="tab-btn-album" class="tab-btn" onclick="switchTab('album')">情報</button>
-        </nav>
+  <aside id="side-panel">
+    <nav class="panel-tabs">
+      <button id="tab-btn-main" class="tab-btn active" onclick="switchTab('main')">ダイスログ</button>
+      <button id="tab-btn-transit" class="tab-btn" onclick="switchTab('transit')">路線図</button>
+      <button id="tab-btn-album" class="tab-btn" onclick="switchTab('album')">情報</button>
+    </nav>
 
-        <div class="panel-main">
-            <section id="tab-main" class="tab-content active">
-                <div id="chat-log"></div>
-            </section>
+    <div class="panel-main">
+      <section id="tab-main" class="tab-content active">
+        <div id="chat-log"></div>
+      </section>
 
-            <section id="tab-transit" class="tab-content">
-                <div class="transit-card">
-                    <header>RAILWAY NETWORK</header>
-                    <div id="route-res" class="data-value">GeoJSON同期中...</div>
-                    <div class="info-note">※路線図タブではダークモードが自動適用されます</div>
-                </div>
-            </section>
+      <section id="tab-transit" class="tab-content">
+        <div class="transit-card">
+          <header>RAILWAY NETWORK</header>
 
-            <section id="tab-album" class="tab-content">
-                <div id="pos-display" class="pos-info">地図をクリックして地点を選択</div>
-                <div id="drop-zone">写真をここにドロップ</div>
-                <div id="album-grid"></div>
-                <button class="clear-btn-full" onclick="clearData()">全データリセット</button>
-            </section>
-        </div>
-
-        <div class="dice-input-wrapper">
-            <input type="text" id="user-name" value="noname" spellcheck="false">
-            <div class="input-main">
-                <textarea id="dice-command" placeholder="Enter×2で送信&#13;1d100+10 / choice[A,B]"></textarea>
-                <button id="send-btn" onclick="rollDice()">送信</button>
+          <div class="kml-tools">
+            <div class="kml-row">
+              <input id="kml-url" type="text" spellcheck="false" placeholder="mymap.kml / KMLのURL" />
+              <button class="kml-btn" onclick="reloadMyMap()">同期</button>
             </div>
-        </div>
-    </aside>
+            <div id="kml-status" class="kml-status">MyMap: 未同期</div>
+          </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js"></script>
-    <script src="script.js"></script>
+          <div id="route-res" class="data-value">GeoJSON同期中...</div>
+          <div class="info-note">※路線図タブではダークモードが自動適用されます</div>
+        </div>
+      </section>
+
+      <section id="tab-album" class="tab-content">
+        <div id="pos-display" class="pos-info">地図をクリックして地点を選択</div>
+        <div id="drop-zone">写真をここにドロップ</div>
+        <div id="album-grid"></div>
+        <button class="clear-btn-full" onclick="clearData()">全データリセット</button>
+      </section>
+    </div>
+
+    <div class="dice-input-wrapper">
+      <input type="text" id="user-name" value="noname" spellcheck="false" />
+      <div class="input-main">
+        <textarea id="dice-command" placeholder="Enter×2で送信&#13;1d100+10 / 1d10 + 10 / choice[A,B]"></textarea>
+        <button id="send-btn" onclick="rollDice()">送信</button>
+      </div>
+    </div>
+  </aside>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
