@@ -508,9 +508,5 @@ window.clearData = () => {
 
 window.onload = init;
 
-window.quickDice = (s) => {
-  const ta = document.getElementById("dice-command");
-  if (!ta) return;
-  ta.value = s;
-  ta.focus();
-};
+
+
