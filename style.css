@@ -22,7 +22,7 @@ body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 .log-item:hover .delete-btn { opacity: 1; }
 .delete-btn:hover { color: #ff4d4d; }
 
-/* --- 120点のボタンデザイン --- */
+/* ボタンデザイン */
 #send-btn, .clear-btn-full, .search-btn { 
     background: #ffffff !important; color: #000000 !important; 
     border: none; font-weight: 800; padding: 10px; 
@@ -43,3 +43,22 @@ body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 
 /* パネルトグルボタン */
 #toggle-panel { position: fixed; right: 350px; top: 15px; z-index: 1001; background: #000; color: #fff; border: 1px solid #333; padding: 8px 12px; cursor: pointer; border-radius: 4px 0 0 4px; transition: 0.4s; }
+/* 既存の style.css はそのまま残してOK（ここから下を末尾に追記） */
+
+/* --- v8 additions (MyMap tools + railway glow) --- */
+.kml-tools { margin: 12px 0 6px; padding: 10px; border: 1px solid #222; border-radius: 10px; background: rgba(0,0,0,0.35); }
+.kml-row { display: flex; gap: 8px; }
+#kml-url { flex: 1; background: #121212; border: 1px solid #333; color: #eee; border-radius: 8px; padding: 10px 10px; font-size: 12px; outline: none; }
+#kml-url:focus { border-color: #3399ff; }
+.kml-btn { background: #3399ff; border: none; color: #000; border-radius: 8px; padding: 10px 12px; cursor: pointer; font-weight: 700; }
+.kml-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.kml-status { margin-top: 8px; font-size: 11px; color: #aaa; }
+
+/* 路線図タブ時 */
+.rail-glow { filter: drop-shadow(0 0 4px rgba(51,153,255,0.35)) drop-shadow(0 0 10px rgba(51,153,255,0.15)); }
+
+/* ログ表示（安全なテキスト描画に合わせたクラス） */
+.log-name { font-size: 10px; color: #3399ff; }
+.log-text { font-size: 14px; color: #eee; white-space: pre-wrap; word-break: break-word; }
+.log-meta { font-size: 10px; color: #666; margin-top: 4px; }
+
