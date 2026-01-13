@@ -92,6 +92,45 @@ async function loadRailway() {
     if (status) status.innerText = "データ読み込み待ち...";
   }
 }
+// ===== v8: 路線名の正規化 & 色当て補助 =====
+function normLineName(s) {
+  return String(s || "")
+    .replace(/\s+/g, "")     // 半角空白除去
+    .replace(/　/g, "")      // 全角スペース除去
+    .replace(/[‐-‒–—―]/g, "-") // いろんなダッシュを統一
+    .replace(/／/g, "/")     // 全角スラッシュを統一
+    .replace(/，/g, ",")     // 全角カンマを統一
+    .trim();
+}
+
+// GeoJSONのpropertiesから路線名を"それっぽい順"に拾う（N02_003が無いデータにも耐える）
+function getLineNameFromProps(props) {
+  if (!props) return "";
+  return (
+    props.N02_003 ||
+    props.name ||
+    props.line ||
+    props.route ||
+    props.title ||
+    ""
+  );
+}
+
+// 辞書に無い路線名の一覧を出す（⑤）
+function debugMissingLineNames(geojson) {
+  const missing = new Set();
+  const keys = new Set(Object.keys(RAIL_COLORS).map(normLineName));
+
+  (geojson.features || []).forEach((f) => {
+    const raw = getLineNameFromProps(f.properties);
+    const key = normLineName(raw);
+    if (key && !keys.has(key)) missing.add(key);
+  });
+
+  console.log("=== RAIL_COLORSに無い路線名（要対応）===");
+  console.log([...missing].sort());
+  console.log("合計:", missing.size);
+}
 
 // -----------------------------
 // E. タブ切替（既存仕様維持）
@@ -507,6 +546,7 @@ window.clearData = () => {
 };
 
 window.onload = init;
+
 
 
 
