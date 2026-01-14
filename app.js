@@ -1,14 +1,15 @@
 /* =========================================================
-   My Trip Tool - Unified "Best" Build (v2026-01) + FixPack
-   - JR East + JR Central only (bbox + operator filter)
-   - Station.json(LineString) -> Point化して駅を表示
-   - Color map: key正規化 + カンマ分割 + 表記ゆれ吸収
+   My Trip Tool (Google Maps版 / v2026-01)
+   - Google Maps JS API
+   - railway.json + Station.json を描画
+   - 東日本 + 東海(静岡〜愛知) + 関東私鉄だけにフィルタ
+   - RAIL_COLORS 正規化（カンマ区切りキーを展開）
+   - My Maps は「共有URL」を iframe 埋め込み（KML不要）
 ========================================================= */
 
-/* ====== あなたの巨大な RAIL_COLORS はここに貼る（そのまま） ====== */
+/* ====== ここにあなたの巨大な RAIL_COLORS を「1回だけ」貼る ====== */
 const RAIL_COLORS = {
-  const RAIL_COLORS = {
-  "東海道線": "#F0862B",
+ "東海道線": "#F0862B",
   "伊東線": "#008803",
   "上野東京ライン": "#91278F",
   "横須賀線,総武快速線": "#007AC1",
@@ -88,51 +89,61 @@ const RAIL_COLORS = {
   "多摩都市モノレール線": "#E97119",
   "ゆりかもめ": "#E97119"
 };
-};
 
 /* ====== Files ====== */
 const FILES = {
   railway: "railway.json",
-  // ここがポイント：GitHub上の実在名に合わせる（どちらでも動くようにフォールバック）
-  stationsCandidates: ["Station.json", "station.json", "stations.json"],
-  defaultKml: "mymap.kml",
+  stations: "Station.json",
 };
 
-const STORAGE_KEY = "mytrip_state_v202601";
+const DEFAULT_MYMAP_URL = "https://www.google.com/maps/d/edit?mid=1Rzv6BhrJVWUstH44KSTPe_Eq5idyLC4&usp=sharing";
 
-/* ---------- Region Filter (JR East + Tokai area) ---------- */
-/**
- * 「東日本と東海の範囲だけ」＝地理的に絞るのが一番安全（データの会社名揺れにも強い）
- * ざっくり:
- *   西: 136.0（滋賀より東）/ 東: 146.5 / 南: 33.0 / 北: 43.8
- * ※ もっと狭めたいならここを調整してOK
- */
-const REGION_BBOX = { west: 136.0, south: 33.0, east: 146.5, north: 43.8 };
+/* ====== Region Filter ======
+  - 北海道・九州・四国を除外（= 本州中心）
+  - 東海は静岡〜愛知
+  - 私鉄は関東（会社名で制限 + 座標でも絞る）
+*/
+const BBOX_HONSHU = { minLng: 135.0, minLat: 34.0, maxLng: 142.5, maxLat: 41.9 };
+const BBOX_TOKAI_SHIZUOKA_AICHI = { minLng: 137.0, minLat: 34.5, maxLng: 138.9, maxLat: 35.8 };
+const BBOX_KANTO = { minLng: 138.4, minLat: 34.8, maxLng: 141.2, maxLat: 37.2 };
 
-// 会社名ベースでも絞る（あくまで補助）
-const OPERATOR_ALLOW = new Set([
-  "東日本旅客鉄道",     // JR East
-  "東海旅客鉄道",       // JR Central
-  // データによっては「東日本旅客鉄道株式会社」等があるので部分一致で見る
+const JR_EAST = "東日本旅客鉄道";
+const JR_CENTRAL = "東海旅客鉄道";
+
+// 関東私鉄（必要ならここに追加/削除）
+const KANTO_PRIVATE = new Set([
+  "東武鉄道",
+  "西武鉄道",
+  "京王電鉄",
+  "小田急電鉄",
+  "東急電鉄",
+  "京急電鉄",
+  "相模鉄道",
+  "東京メトロ",
+  "東京都交通局",
+  "横浜市交通局",
+  "横浜高速鉄道",
+  "東京臨海高速鉄道",
+  "首都圏新都市鉄道",
+  "東葉高速鉄道",
+  "多摩都市モノレール",
+  "ゆりかもめ",
 ]);
 
 /* ---------- Utilities ---------- */
-function nowISO(){ return new Date().toISOString(); }
-function fmtTime(iso){
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? "" : d.toLocaleString();
-}
 function norm(s){
   return String(s||"")
     .replace(/\s+/g,"")
-    .replace(/[　]/g,"")
+    .replace(/　/g,"")
     .replace(/／/g,"/")
     .replace(/，/g,",")
-    .replace(/・/g,"")   // 追加：表記ゆれ吸収
     .trim();
 }
 function splitCSV(s){
   return String(s||"").split(",").map(x=>x.trim()).filter(Boolean);
+}
+function inBbox(lng, lat, b){
+  return lng >= b.minLng && lng <= b.maxLng && lat >= b.minLat && lat <= b.maxLat;
 }
 function hashColor(str){
   const s = String(str||"");
@@ -141,84 +152,8 @@ function hashColor(str){
   const c = (h & 0xFFFFFF).toString(16).padStart(6,"0");
   return `#${c}`;
 }
-function escapeHtml(str){
-  return String(str ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#39;");
-}
 
-function inBBox(lng, lat){
-  return (
-    lng >= REGION_BBOX.west &&
-    lng <= REGION_BBOX.east &&
-    lat >= REGION_BBOX.south &&
-    lat <= REGION_BBOX.north
-  );
-}
-
-function geomTouchesBBox(geom){
-  if (!geom) return false;
-
-  const t = geom.type;
-  const c = geom.coordinates;
-
-  const checkCoord = (xy) => {
-    if (!Array.isArray(xy) || xy.length < 2) return false;
-    const [lng, lat] = xy;
-    return inBBox(lng, lat);
-  };
-
-  if (t === "Point") return checkCoord(c);
-  if (t === "LineString") return c.some(checkCoord);
-  if (t === "MultiLineString") return c.some(line => Array.isArray(line) && line.some(checkCoord));
-  if (t === "MultiPoint") return c.some(checkCoord);
-  // 他型は必要になったら追加
-  return false;
-}
-
-function operatorAllowed(op){
-  const s = String(op || "");
-  if (!s) return true; // 会社名が無いデータもあるので、bbox側で落とす前提
-  // 部分一致許容
-  for (const key of OPERATOR_ALLOW){
-    if (s.includes(key)) return true;
-  }
-  return false;
-}
-
-/* ---------- State ---------- */
-let state = {
-  logs: [],
-  album: [],
-  ui: { filter: "all", q: "" },
-  kmlUrl: FILES.defaultKml,
-  stationsVisible: true
-};
-
-function loadState(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return;
-  try{
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object"){
-      state.logs = Array.isArray(parsed.logs) ? parsed.logs : [];
-      state.album = Array.isArray(parsed.album) ? parsed.album : [];
-      state.ui = parsed.ui || state.ui;
-      state.kmlUrl = typeof parsed.kmlUrl === "string" ? parsed.kmlUrl : state.kmlUrl;
-      state.stationsVisible = typeof parsed.stationsVisible === "boolean" ? parsed.stationsVisible : true;
-    }
-  }catch(e){
-    console.warn("state load fail", e);
-  }
-}
-function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-/* ---------- Tabs ---------- */
+/* ---------- UI (最低限) ---------- */
 window.switchTab = (tab) => {
   document.querySelectorAll(".bottom-tab").forEach(b=>b.classList.remove("active"));
   document.querySelectorAll(".tab-pane").forEach(p=>p.classList.remove("active"));
@@ -226,136 +161,168 @@ window.switchTab = (tab) => {
   document.getElementById(`tab-${tab}`)?.classList.add("active");
 
   if (tab === "transit"){
-    setMapMode("transit");
+    // 路線図タブに来たら路線/駅を表示
+    showTransitLayers(true);
   } else {
-    setMapMode("normal");
+    // それ以外のタブでは消してスッキリ
+    showTransitLayers(false);
   }
 };
 
-/* ---------- Map ---------- */
-let map, tiles;
-let railLayer = null;
-let stationLayer = null;
-let railPane = null;
-let albumLayerGroup = null;
-let myMapLayer = null;
-let lastPos = null;
+window.sendMessage = () => {
+  // 今回は地図修正が主目的なので、ここは簡易（壊れない最小）
+  const name = document.getElementById("user-name")?.value || "noname";
+  const text = document.getElementById("dice-command")?.value || "";
+  if (!text.trim()) return;
+  appendLog({ name, text });
+  document.getElementById("dice-command").value = "";
+};
 
-function initMap(){
-  tiles = {
-    light: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"),
-    dark:  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"),
-  };
-
-  map = L.map("map", { zoomControl: false }).setView([35.6812, 139.7671], 10);
-  tiles.light.addTo(map);
-  L.control.zoom({ position: "bottomleft" }).addTo(map);
-
-  railPane = map.createPane("railPane");
-  railPane.classList.add("rail-glow");
-  railPane.style.zIndex = 450;
-
-  albumLayerGroup = L.layerGroup().addTo(map);
-
-  map.on("click", (e)=>{
-    lastPos = e.latlng;
-    const el = document.getElementById("pos-display");
-    if (el){
-      el.innerText = `選択中: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
-    }
-  });
+function appendLog({name, text}){
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const el = document.createElement("div");
+  el.className = "log-item";
+  el.innerHTML = `
+    <div class="log-head">
+      <div class="log-name">${escapeHtml(name)}</div>
+      <div class="log-time">${new Date().toLocaleString()}</div>
+    </div>
+    <div class="log-body">${escapeHtml(text)}</div>
+  `;
+  log.prepend(el);
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[m]);
 }
 
-function setMapMode(mode){
-  if (!map) return;
-  if (mode === "transit"){
-    map.removeLayer(tiles.light);
-    tiles.dark.addTo(map);
-    if (railLayer && !map.hasLayer(railLayer)) railLayer.addTo(map);
-    if (stationLayer && state.stationsVisible && !map.hasLayer(stationLayer)) stationLayer.addTo(map);
-  } else {
-    map.removeLayer(tiles.dark);
-    tiles.light.addTo(map);
-    if (railLayer && map.hasLayer(railLayer)) map.removeLayer(railLayer);
-    if (stationLayer && map.hasLayer(stationLayer)) map.removeLayer(stationLayer);
+/* ---------- My Maps (URL共有 → iframe embed) ---------- */
+let myMapVisible = false;
+
+window.applyMyMapUrl = () => {
+  const input = document.getElementById("mymap-url");
+  const url = (input?.value || "").trim() || DEFAULT_MYMAP_URL;
+  setMyMapEmbedFromShareUrl(url);
+  document.getElementById("mymap-status").textContent = "設定OK";
+};
+
+window.toggleMyMap = () => {
+  myMapVisible = !myMapVisible;
+  const iframe = document.getElementById("mymap-embed");
+  if (!iframe) return;
+  iframe.classList.toggle("active", myMapVisible);
+};
+
+// 共有URL（edit/view）から mid を抜いて embed URL を作る
+function setMyMapEmbedFromShareUrl(shareUrl){
+  const iframe = document.getElementById("mymap-embed");
+  if (!iframe) return;
+
+  let mid = "";
+  try{
+    const u = new URL(shareUrl);
+    mid = u.searchParams.get("mid") || "";
+  }catch{}
+
+  if (!mid){
+    // 直で mid だけ貼られた場合も拾う
+    const m = shareUrl.match(/mid=([^&]+)/);
+    mid = m ? m[1] : "";
   }
+
+  if (!mid){
+    document.getElementById("mymap-status").textContent = "URLから mid が取れませんでした";
+    return;
+  }
+
+  // これが「URL共有で埋め込み」（KML不要）
+  const embed = `https://www.google.com/maps/d/u/0/embed?mid=${encodeURIComponent(mid)}`;
+  iframe.src = embed;
 }
+
+/* ---------- Google Map ---------- */
+let map;
+let lastClickLatLng = null;
+
+let railPolylines = [];
+let stationMarkers = [];
+let railBounds = new google.maps.LatLngBounds();
+
+let stationsVisible = true;
+window.toggleStations = () => {
+  stationsVisible = !stationsVisible;
+  for (const m of stationMarkers) m.setMap(stationsVisible ? map : null);
+};
 
 window.fitToRail = () => {
-  if (railLayer && railLayer.getBounds){
-    try{ map.fitBounds(railLayer.getBounds().pad(0.08)); }catch{}
+  if (!railBounds.isEmpty()){
+    map.fitBounds(railBounds, 40);
   }
 };
 
-window.toggleStations = () => {
-  state.stationsVisible = !state.stationsVisible;
-  saveState();
-  if (!stationLayer) return;
-  if (state.stationsVisible){
-    if (!map.hasLayer(stationLayer) && document.getElementById("tab-transit")?.classList.contains("active")){
-      stationLayer.addTo(map);
-    }
-  }else{
-    if (map.hasLayer(stationLayer)) map.removeLayer(stationLayer);
+function showTransitLayers(on){
+  for (const p of railPolylines) p.setMap(on ? map : null);
+  if (stationsVisible){
+    for (const m of stationMarkers) m.setMap(on ? map : null);
+  } else {
+    for (const m of stationMarkers) m.setMap(null);
   }
-};
+}
 
-/* ---------- Railway (Colors + Region Filter) ---------- */
-
-/** 表記ゆれの吸収（必要なら増やせる） */
-const LINE_ALIASES = new Map([
-  // 例：データ側/あなたの辞書側の揺れをここで寄せる
-  [norm("中央快速線"), norm("中央線快速")],
-  [norm("中央快速線,青梅線,五日市線"), norm("中央線快速")],
-  [norm("京浜東北線"), norm("京浜東北線")],
-  [norm("根岸線"), norm("根岸線")],
-]);
-
-function buildColorMap(){
+/* ---------- Railway colors (正規化) ---------- */
+function buildColorMapExpanded(){
+  // "横須賀線,総武快速線" みたいなキーを分解して両方に同色を当てる
   const m = new Map();
-  for (const [rawKey, rawVal] of Object.entries(RAIL_COLORS)){
-    const color = String(rawVal || "").trim();
-    if (!color) continue;
-
-    // ✅ カンマ連結キーを分割して全部登録
-    const parts = splitCSV(rawKey);
-    if (!parts.length){
-      m.set(norm(rawKey), color);
+  for (const [k, v] of Object.entries(RAIL_COLORS || {})){
+    const keys = splitCSV(k);
+    if (keys.length === 0){
+      m.set(norm(k), v);
       continue;
     }
-    for (const p of parts){
-      m.set(norm(p), color);
-    }
+    for (const kk of keys) m.set(norm(kk), v);
   }
   return m;
 }
-
-function pickLineColor(colorMap, lineName){
-  const k0 = norm(lineName);
-  const k1 = LINE_ALIASES.get(k0) || k0;
-  return colorMap.get(k0) || colorMap.get(k1) || hashColor(k0 || "rail");
+function colorForLineName(colorMap, lineName){
+  const key = norm(lineName);
+  return colorMap.get(key) || hashColor(key);
 }
 
-function slimRailwayGeoJSON(data){
-  const feats = (data.features || []).filter(f=>{
-    const op = f?.properties?.N02_004 ?? "";
-    if (!operatorAllowed(op)) return false;
-    return geomTouchesBBox(f.geometry);
-  });
+/* ---------- Filters ---------- */
+function allowRailFeature(props, lng, lat){
+  const company = String(props?.N02_004 || "");
+  const line = String(props?.N02_003 || "");
 
-  return {
-    type: "FeatureCollection",
-    features: feats.map(f => ({
-      type: "Feature",
-      geometry: f.geometry,
-      properties: {
-        N02_003: f?.properties?.N02_003 ?? "",
-        N02_004: f?.properties?.N02_004 ?? ""
-      }
-    }))
-  };
+  // 本州だけ（北海道/九州/四国/沖縄をざっくり除外）
+  if (!inBbox(lng, lat, BBOX_HONSHU)) return false;
+
+  // JR東日本（本州側）
+  if (company === JR_EAST) return true;
+
+  // JR東海（静岡〜愛知だけ）
+  if (company === JR_CENTRAL){
+    return inBbox(lng, lat, BBOX_TOKAI_SHIZUOKA_AICHI);
+  }
+
+  // 関東私鉄（会社名 + 関東bbox）
+  if (KANTO_PRIVATE.has(company)){
+    return inBbox(lng, lat, BBOX_KANTO);
+  }
+
+  // （必要なら地下鉄など line/companyで追加）
+  // 例: company === "東京都交通局" は上でKANTO_PRIVATEに入れてある
+
+  return false;
 }
 
+function allowStationFeature(props, lng, lat){
+  // Station.json は N02_004 が会社名、N02_003 が路線名、N02_005 が駅名っぽい :contentReference[oaicite:3]{index=3}
+  return allowRailFeature(props, lng, lat);
+}
+
+/* ---------- Load & Draw ---------- */
 async function loadRailway(){
   const status = document.getElementById("route-res");
   try{
@@ -363,166 +330,162 @@ async function loadRailway(){
     if (!res.ok) throw new Error(`${FILES.railway} ${res.status}`);
     const data = await res.json();
 
-    const slim = slimRailwayGeoJSON(data);
-    const colorMap = buildColorMap();
+    const colorMap = buildColorMapExpanded();
 
-    if (railLayer) { try{ map.removeLayer(railLayer); }catch{} }
+    // クリア
+    for (const p of railPolylines) p.setMap(null);
+    railPolylines = [];
+    railBounds = new google.maps.LatLngBounds();
 
-    railLayer = L.geoJson(slim, {
-      pane: "railPane",
-      style: (f)=>{
-        const raw = f?.properties?.N02_003 ?? "";
-        const color = pickLineColor(colorMap, raw);
-        return { color, weight: 3, opacity: 0.92 };
-      },
-      onEachFeature: (f, layer)=>{
-        const name = f?.properties?.N02_003 || "路線";
-        const op = f?.properties?.N02_004 || "";
-        layer.bindPopup(`<b>${escapeHtml(name)}</b><br/><span style="opacity:.7">${escapeHtml(op)}</span>`);
+    let kept = 0;
+
+    for (const f of (data.features || [])){
+      if (!f || !f.geometry) continue;
+      const props = f.properties || {};
+      const lineName = props.N02_003 || "";
+
+      if (f.geometry.type === "LineString"){
+        const path = [];
+        let ok = false;
+
+        for (const [lng, lat] of (f.geometry.coordinates || [])){
+          if (typeof lng !== "number" || typeof lat !== "number") continue;
+          path.push({ lat, lng });
+          if (!ok && allowRailFeature(props, lng, lat)) ok = true;
+        }
+        if (!ok || path.length < 2) continue;
+
+        const strokeColor = colorForLineName(colorMap, lineName);
+
+        const poly = new google.maps.Polyline({
+          path,
+          strokeColor,
+          strokeOpacity: 0.9,
+          strokeWeight: 3,
+          clickable: true,
+        });
+
+        poly.addListener("click", (e)=>{
+          const content = `<div style="font-size:12px;">
+            <b>${escapeHtml(lineName || "路線")}</b><br/>
+            ${escapeHtml(String(props.N02_004 || ""))}
+          </div>`;
+          new google.maps.InfoWindow({ content, position: e.latLng }).open({ map });
+        });
+
+        poly.setMap(map);
+        railPolylines.push(poly);
+        kept++;
+
+        // bounds
+        for (const pt of path) railBounds.extend(pt);
       }
-    });
+    }
 
-    if (status) status.innerText = `路線データ同期完了（範囲: 東日本+東海）`;
+    status.textContent = `路線: ${kept.toLocaleString()} 本（フィルタ後）`;
   }catch(e){
-    console.warn(e);
-    if (status) status.innerText = "路線データ読み込み失敗";
+    console.error(e);
+    status.textContent = `路線の読み込みに失敗: ${String(e?.message || e)}`;
   }
-}
-
-/* ---------- Stations (LineString -> Point + Region Filter) ---------- */
-function toPointFromLineString(coords){
-  // LineStringの中心っぽい座標を取る（雑に真ん中）
-  if (!Array.isArray(coords) || coords.length === 0) return null;
-  const mid = coords[Math.floor(coords.length / 2)];
-  if (!Array.isArray(mid) || mid.length < 2) return null;
-  return { type: "Point", coordinates: [mid[0], mid[1]] };
-}
-
-function slimStationsGeoJSON(data){
-  const feats = (data.features || []).map(f=>{
-    let geom = f.geometry;
-
-    // ✅ Station.json が LineString でも点に変換して表示できるようにする
-    if (geom?.type === "LineString"){
-      const pt = toPointFromLineString(geom.coordinates);
-      if (pt) geom = pt;
-    }
-
-    // Point化できないものは捨てる
-    if (!geom || geom.type !== "Point") return null;
-
-    // 範囲＆会社名で絞る
-    const op = f?.properties?.N02_004 ?? "";
-    if (!operatorAllowed(op)) return null;
-    if (!geomTouchesBBox(geom)) return null;
-
-    return {
-      type: "Feature",
-      geometry: geom,
-      properties: {
-        station: f?.properties?.N02_005 ?? "",
-        line: f?.properties?.N02_003 ?? "",
-        operator: op
-      }
-    };
-  }).filter(Boolean);
-
-  return { type: "FeatureCollection", features: feats };
-}
-
-async function fetchFirstOkJson(candidates){
-  let lastErr = null;
-  for (const p of candidates){
-    try{
-      const res = await fetch(p);
-      if (!res.ok) throw new Error(`${p} ${res.status}`);
-      const json = await res.json();
-      return { path: p, json };
-    }catch(e){
-      lastErr = e;
-    }
-  }
-  throw lastErr || new Error("no station file");
 }
 
 async function loadStations(){
   try{
-    const { path, json } = await fetchFirstOkJson(FILES.stationsCandidates);
-    const slim = slimStationsGeoJSON(json);
+    const res = await fetch(FILES.stations);
+    if (!res.ok) throw new Error(`${FILES.stations} ${res.status}`);
+    const data = await res.json();
 
-    if (stationLayer) { try{ map.removeLayer(stationLayer); }catch{} }
+    // クリア
+    for (const m of stationMarkers) m.setMap(null);
+    stationMarkers = [];
 
-    stationLayer = L.geoJson(slim, {
-      pointToLayer: (_f, latlng) => L.circleMarker(latlng, {
-        radius: 2.8,
-        weight: 1,
-        opacity: 0.9,
-        fillOpacity: 0.9
-      }),
-      onEachFeature: (f, layer)=>{
-        const st = f?.properties?.station || "駅";
-        const ln = f?.properties?.line || "";
-        const op = f?.properties?.operator || "";
-        layer.bindPopup(
-          `<b>${escapeHtml(st)}</b><br/>` +
-          `<span style="opacity:.8">${escapeHtml(ln)}</span><br/>` +
-          `<span style="opacity:.6">${escapeHtml(op)}</span>`
-        );
+    let kept = 0;
+
+    for (const f of (data.features || [])){
+      if (!f || !f.geometry) continue;
+      const props = f.properties || {};
+      const stationName = props.N02_005 || "駅";
+
+      // Station.json が LineString なので中心点を作る
+      let lng = null, lat = null;
+
+      if (f.geometry.type === "LineString"){
+        const coords = f.geometry.coordinates || [];
+        if (coords.length === 0) continue;
+        // 中点
+        const mid = coords[Math.floor(coords.length / 2)];
+        if (!mid) continue;
+        lng = mid[0]; lat = mid[1];
+      } else if (f.geometry.type === "Point"){
+        lng = f.geometry.coordinates?.[0];
+        lat = f.geometry.coordinates?.[1];
+      } else {
+        continue;
       }
-    });
 
-    // transitタブ中で、表示フラグONなら追加
-    if (state.stationsVisible && document.getElementById("tab-transit")?.classList.contains("active")){
-      stationLayer.addTo(map);
+      if (typeof lng !== "number" || typeof lat !== "number") continue;
+      if (!allowStationFeature(props, lng, lat)) continue;
+
+      const marker = new google.maps.Marker({
+        position: { lat, lng },
+        map: stationsVisible ? map : null,
+        title: String(stationName),
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 3,
+          strokeWeight: 1,
+          fillOpacity: 0.9,
+        }
+      });
+
+      marker.addListener("click", ()=>{
+        const content = `<div style="font-size:12px;">
+          <b>${escapeHtml(stationName)}</b><br/>
+          ${escapeHtml(String(props.N02_003 || ""))}<br/>
+          ${escapeHtml(String(props.N02_004 || ""))}
+        </div>`;
+        new google.maps.InfoWindow({ content, position: marker.getPosition() }).open({ map });
+      });
+
+      stationMarkers.push(marker);
+      kept++;
     }
 
-    console.log(`stations loaded from: ${path}, features: ${slim.features.length}`);
+    console.log("stations kept:", kept);
   }catch(e){
-    console.warn(e);
+    console.error(e);
   }
 }
 
-/* ---------- MyMap(KML) (現行維持) ---------- */
-window.reloadMyMap = () => {
-  const input = document.getElementById("kml-url");
-  const url = (input?.value || "").trim() || FILES.defaultKml;
+/* ---------- App init (Google callback) ---------- */
+window.initApp = async () => {
+  // Map init
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 35.6812, lng: 139.7671 },
+    zoom: 11,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+  });
 
-  state.kmlUrl = url;
-  saveState();
+  map.addListener("click", (e)=>{
+    lastClickLatLng = e.latLng;
+    const el = document.getElementById("pos-display");
+    if (el){
+      el.textContent = `選択中: ${e.latLng.lat().toFixed(4)}, ${e.latLng.lng().toFixed(4)}`;
+    }
+  });
 
-  const status = document.getElementById("kml-status");
-  if (status) status.innerText = "同期中...";
+  // MyMaps 初期設定（共有URL→embed）
+  const urlInput = document.getElementById("mymap-url");
+  if (urlInput) urlInput.value = DEFAULT_MYMAP_URL;
+  setMyMapEmbedFromShareUrl(DEFAULT_MYMAP_URL);
+  document.getElementById("mymap-status").textContent = "初期URLを設定済み（表示は路線図タブで切替）";
 
-  try{
-    if (myMapLayer) { map.removeLayer(myMapLayer); myMapLayer = null; }
+  // data load
+  await loadRailway();
+  await loadStations();
 
-    myMapLayer = omnivore.kml(url)
-      .on("ready", function(){
-        if (status) status.innerText = "同期完了";
-      })
-      .on("error", function(){
-        if (status) status.innerText = "KML読み込み失敗";
-      })
-      .addTo(map);
-  }catch(e){
-    console.warn(e);
-    if (status) status.innerText = "KML読み込み失敗";
-  }
+  // 初期はメインタブ（路線/駅は非表示）
+  showTransitLayers(false);
 };
-
-/* ---------- Init ---------- */
-function init(){
-  loadState();
-  initMap();
-
-  // KML input restore
-  const kml = document.getElementById("kml-url");
-  if (kml) kml.value = state.kmlUrl || FILES.defaultKml;
-
-  // Load transit data
-  loadRailway();
-  loadStations();
-
-  // 初期タブがmainなので、路線/駅は transit に切り替えた時に表示される
-}
-window.onload = init;
