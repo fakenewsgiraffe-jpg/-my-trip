@@ -7,7 +7,7 @@
  */
 
 /* ===== ここはあなたの現行の RAIL_COLORS を“そのまま”残してください ===== */
-const RAIL_COLORS = {const RAIL_COLORS = {
+const RAIL_COLORS = {
   // === JR東日本 首都圏 ===
   "山手線": "#9ACD32",
   "京浜東北線": "#00B2E5",
@@ -600,4 +600,5 @@ window.clearData = () => {
 };
 
 window.onload = init;
+
 
