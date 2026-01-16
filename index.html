@@ -6,11 +6,19 @@
   <title>My Trip Tool</title>
 
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Leaflet（クレカ不要） -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
 </head>
 <body>
   <div id="map"></div>
 
-  <!-- My Maps (URL共有の埋め込み) -->
+  <!-- My Maps（URL共有の埋め込み：これはそのまま使う） -->
   <iframe
     id="mymap-embed"
     title="My Maps"
@@ -78,10 +86,9 @@
             <div class="album-form">
               <input id="album-title" type="text" placeholder="タイトル（任意）" spellcheck="false" />
               <input id="album-tags" type="text" placeholder="タグ（カンマ区切り）" spellcheck="false" />
-              <input id="album-people" type="text" placeholder="同行者（カンマ区切り）" spellcheck="false" />
               <textarea id="album-memo" placeholder="メモ（任意）"></textarea>
             </div>
-            <div id="drop-zone">写真をここにドロップ（今回は未実装でもOK）</div>
+            <div id="drop-zone">写真をここにドロップ</div>
           </div>
           <div id="album-grid"></div>
         </div>
@@ -139,13 +146,14 @@
     </div>
   </aside>
 
-  <!-- Google Maps JS API（キーを入れる） -->
+  <!-- Leaflet JS -->
   <script
-    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initApp"
-    async
-    defer
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
   ></script>
 
+  <!-- App -->
   <script src="app.js"></script>
 </body>
 </html>
