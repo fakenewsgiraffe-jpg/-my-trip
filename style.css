@@ -369,3 +369,15 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
 #mymap-embed.active{
   display: block;
 }
+
+/* Leaflet popupが見やすいように */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #111;
+  color: #eaeaea;
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
