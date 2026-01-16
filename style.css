@@ -380,4 +380,30 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
   font-size: 10px;
   opacity: 0.8;
 }
+/* =========================
+   ネオン路線
+========================= */
+.leaflet-overlay-pane path {
+  filter:
+    drop-shadow(0 0 4px rgba(255,255,255,0.4))
+    drop-shadow(0 0 10px rgba(255,255,255,0.2));
+}
+
+/* =========================
+   POI アイコン
+========================= */
+.poi-icon div {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* =========================
+   文字を静かに
+========================= */
+.leaflet-control-attribution {
+  font-size: 9px;
+  opacity: 0.4;
+}
 
