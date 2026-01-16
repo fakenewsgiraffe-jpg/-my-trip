@@ -94,6 +94,7 @@ const RAIL_COLORS = {
 const FILES = {
   railway: "railway.json",
   stations: "Station.json",
+　defaultKml: "mymap.kml",
 };
 
 const DEFAULT_MYMAP_URL = "https://www.google.com/maps/d/edit?mid=1Rzv6BhrJVWUstH44KSTPe_Eq5idyLC4&usp=sharing";
@@ -489,3 +490,4 @@ window.initApp = async () => {
   // 初期はメインタブ（路線/駅は非表示）
   showTransitLayers(false);
 };
+
